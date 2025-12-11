@@ -10,6 +10,7 @@ body {
 }
 
 #game-container {
+    /* 盤面を少し左に寄せるため、中央揃えを維持しつつ、左側の余白を減らす */
     display: flex;
     gap: 20px;
     background-color: #222; /* 濃いめの黒 */
@@ -75,26 +76,47 @@ body {
     width: 150px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 15px; /* 要素間のスペースを調整 */
 }
 
-/* モード切り替えボタンの配置 */
+/* モード切り替えボタンの配置とデザイン */
 #mode-controls {
-    text-align: right;
-    margin-bottom: 5px;
+    order: -1; /* flexコンテナ内で最初に表示 */
+    text-align: center; 
+    margin-bottom: 5px; 
 }
 #mode-toggle-button {
-    padding: 5px 10px;
-    background-color: #6a0dad; /* 紫色 */
+    width: 50px; /* 横幅を短く */
+    height: 40px; /* 高さ */
+    padding: 0;
+    background-color: #6a0dad; 
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 0.9em;
     transition: background-color 0.2s;
+    display: flex; 
+    justify-content: center;
+    align-items: center;
 }
 #mode-toggle-button:hover {
     background-color: #4b0082;
+}
+
+/* アイコンのスタイル (文字の代わりにUnicode文字を使用) */
+#mode-icon {
+    font-size: 1.5em; 
+    line-height: 1; /* アイコンの垂直位置を調整 */
+}
+
+/* プレイモードへ誘導アイコン (ペンの代替) */
+.icon-edit::before {
+    content: "\270E"; /* ✍ (ペンマークの代替) */
+}
+/* エディットモードへ誘導アイコン (コントローラー/プロコンの代替) */
+.icon-play::before {
+    content: "\1F3AE"; /* 🎮 (ゲームコントローラー) */
 }
 
 
@@ -193,6 +215,7 @@ body {
     width: 30px;
     height: 30px;
     border: 2px solid #000; 
+    cursor: pointer; /* タップ可能であることを示す */
 }
 
 #apply-next-button {
@@ -205,32 +228,6 @@ body {
     cursor: pointer;
 }
 
-/* 操作説明 */
-#controls-panel {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #222; 
-    border-radius: 0;
-    box-shadow: none;
-    border: 1px solid #444;
-}
-
-/* リセットボタンのスタイル */
-#reset-button {
-    margin-top: 15px;
-    padding: 10px 20px;
-    background-color: #e63946;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.2s;
-}
-
-#reset-button:hover {
-    background-color: #c9303d;
-}
 
 /* モバイル操作ボタンの基本スタイル (1段、正方形) */
 #mobile-controls {
@@ -283,12 +280,22 @@ body {
         margin: 0 auto;
     }
 
+    /* モード切替ボタンを右上に表示するために、info-panelを調整 */
+    #info-panel {
+        width: 100%;
+        gap: 10px;
+        padding-top: 10px;
+    }
+    
+    #mode-controls {
+        order: -3; /* モバイルでは最上部へ */
+        text-align: right;
+    }
+
     /* プレイモード時: スコアとNEXTを横並びにする */
     #play-mode-info {
-        width: 100%;
         flex-direction: row;
         justify-content: space-around;
-        padding-top: 10px;
     }
 
     .info-box {
@@ -300,15 +307,13 @@ body {
         width: 100%;
         flex-direction: column;
         align-items: center;
-        padding-top: 10px;
     }
     .edit-section {
         width: 100%;
-    }
-
-    #controls-panel {
-        display: none; 
+        box-sizing: border-box;
     }
     
-    /* モバイル操作ボタンの表示制御はJSに移管 */
+    #mobile-controls {
+        /* JSで表示制御 */
+    }
 }
