@@ -25,6 +25,12 @@ body {
     grid-template-columns: repeat(6, 30px); /* 6列 */
     border: 3px solid #666;
     background-color: #000; /* 盤面は真っ黒 */
+
+    /* 【新規追加】非常に薄いマス目の設定 */
+    background-image: linear-gradient(to right, #1a1a1a 1px, transparent 1px),
+                      linear-gradient(to bottom, #1a1a1a 1px, transparent 1px);
+    background-size: 30px 30px; /* 各セルのサイズに合わせる */
+    background-position: -1px -1px; /* 枠線と重ならないように微調整 */
 }
 
 /* ぷよ（基本スタイル） */
@@ -48,7 +54,7 @@ body {
 .puyo-5 { background-color: #cccccc; border-color: #999999; } /* 仮のおじゃまぷよ */
 .puyo-0 { background-color: transparent; border: none; } /* 空 */
 
-/* 【新規追加】ゴーストぷよのスタイル */
+/* ゴーストぷよのスタイル */
 .puyo-ghost {
     opacity: 0.3; /* 薄く表示 */
     border: 1px solid #777 !important; /* 枠線も薄く */
@@ -73,8 +79,8 @@ body {
 
 .info-box {
     padding: 10px;
-    border: 1px solid #444; /* 枠線も暗めに */
-    background-color: #333; /* 背景を暗く */
+    border: 1px solid #444; 
+    background-color: #333; 
     border-radius: 0;
     text-align: center;
 }
@@ -95,7 +101,7 @@ body {
 #controls-panel {
     margin-top: 20px;
     padding: 15px;
-    background-color: #222; /* 暗い背景 */
+    background-color: #222; 
     border-radius: 0;
     box-shadow: none;
     border: 1px solid #444;
@@ -116,4 +122,93 @@ body {
 
 #reset-button:hover {
     background-color: #c9303d;
+}
+
+/* 【修正】モバイル操作ボタンの基本スタイル */
+#mobile-controls {
+    display: none; 
+    margin-top: 20px;
+    width: 100%;
+    max-width: 400px;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#move-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+#action-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.mobile-btn {
+    padding: 15px 10px;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #457b9d; /* 青系のコントロールカラー */
+    transition: background-color 0.1s;
+    touch-action: manipulation;
+}
+
+.mobile-btn:active {
+    background-color: #1d3557;
+}
+
+/* 移動・ソフトドロップボタン */
+.move-btn {
+    flex-grow: 1;
+}
+
+/* 回転ボタン */
+.rotate-btn {
+    flex-grow: 1.5; /* A/Bボタンは少し大きく */
+}
+
+/* ハードドロップボタン */
+.drop-btn {
+    background-color: #e63946; /* 赤系のDROPボタンカラー */
+    flex-grow: 2; 
+}
+
+.drop-btn:active {
+    background-color: #c9303d;
+}
+
+/* 画面幅が狭いときのレイアウト調整とボタン表示 (モバイル優先) */
+@media (max-width: 650px) {
+    #game-container {
+        flex-direction: column;
+    }
+    
+    #puyo-board {
+        margin: 0 auto;
+    }
+
+    #info-panel {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-around;
+        padding-top: 10px;
+    }
+
+    .info-box {
+        flex-basis: 30%;
+    }
+
+    #controls-panel {
+        display: none; /* キーボード操作説明を非表示にする */
+    }
+
+    #mobile-controls {
+        display: flex; /* モバイルボタンを表示 */
+    }
 }
