@@ -142,7 +142,7 @@ body {
     height: 65px; 
     padding: 0;
     
-    /* 【統一】フォントサイズを揃える */
+    /* 【統一】フォントサイズを揃える (矢印や文字をこのサイズで表示) */
     font-size: 1.5em; 
     font-weight: bold;
     color: white;
@@ -170,7 +170,6 @@ body {
 .drop-btn:active {
     background-color: #1d3557;
 }
-
 
 /* 画面幅が狭いときのレイアウト調整とボタン表示 (モバイル優先) */
 @media (max-width: 650px) {
@@ -201,4 +200,3 @@ body {
         display: flex; /* モバイルボタンを表示 */
     }
 }
-
