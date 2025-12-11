@@ -72,16 +72,18 @@ function getRandomColor() {
 }
 
 function generateNewPuyo() {
+    // ネクストぷよの色を現在のぷよに設定
     const [c1, c2] = nextPuyoColors.shift();
 
     currentPuyo = {
         mainColor: c1,
         subColor: c2,
         mainX: 2, 
-        mainY: HEIGHT - 1, 
+        mainY: HEIGHT - 1, // 最上部の隠し領域(13)からスタート
         rotation: 0 
     };
 
+    // 新しいネクストぷよを生成し、リストに追加
     nextPuyoColors.push([getRandomColor(), getRandomColor()]);
 }
 
@@ -355,24 +357,29 @@ function renderBoard() {
     const boardElement = document.getElementById('puyo-board');
     boardElement.innerHTML = '';
     
-    // ぷよの描画（HEIGHT-12 から HEIGHT までが可視領域）
-    for (let y = HEIGHT - 12; y < HEIGHT; y++) {
+    // 【修正点1: 盤面表示の逆転修正】
+    // 配列インデックス y = 11 (可視領域の最上段) から y = 0 (最下段) へ逆順に描画。
+    // これにより、HTMLグリッドに挿入される順序が「上から下」となり、表示が正しくなります。
+    // HEIGHT - 3 は、配列の12段目 (インデックス11) を指します。
+    for (let y = HEIGHT - 3; y >= 0; y--) { 
         for (let x = 0; x < WIDTH; x++) {
             const puyoElement = document.createElement('div');
             
-            // 固定されたぷよの色
-            const color = board[y][x];
-            puyoElement.className = `puyo puyo-${color}`;
-            
-            // 落下中のぷよがそのマスにあるかチェックし、あれば色を上書き (簡易描画)
+            let cellColor = board[y][x]; // 固定されたぷよの色
+
+            // 【修正点2: 落下中のぷよの描画修正】
+            // 落下中のぷよがこのセルにあるかチェックし、あれば固定ぷよより優先して描画します。
             if (currentPuyo && gameState === 'playing') {
                 const coords = getPuyoCoords();
                 const currentPuyoHere = coords.find(p => p.x === x && p.y === y);
+                
                 if (currentPuyoHere) {
-                    puyoElement.className = `puyo puyo-${currentPuyoHere.color}`;
+                    // 落下中のぷよを優先して描画
+                    cellColor = currentPuyoHere.color;
                 }
             }
             
+            puyoElement.className = `puyo puyo-${cellColor}`;
             boardElement.appendChild(puyoElement);
         }
     }
