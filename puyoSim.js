@@ -67,7 +67,7 @@ function initializeGame() {
 }
 
 /**
- * 【新規追加】盤面リセット関数
+ * 盤面リセット関数
  */
 function resetGame() {
     // 進行中の連鎖処理を停止し、ゲームを初期状態に戻す
@@ -115,6 +115,26 @@ function generateNewPuyo() {
     nextPuyoColors.push(getRandomPair());
 }
 
+/**
+ * 特定のぷよの状態から座標（位置のみ）を取得するヘルパー関数
+ */
+function getCoordsFromState(puyoState) {
+    const { mainX, mainY, rotation } = puyoState;
+    let subX = mainX;
+    let subY = mainY;
+
+    if (rotation === 0) subY = mainY + 1; // 下
+    if (rotation === 1) subX = mainX - 1; // 左
+    if (rotation === 2) subY = mainY - 1; // 上
+    if (rotation === 3) subX = mainX + 1; // 右
+
+    return [
+        { x: mainX, y: mainY },
+        { x: subX, y: subY }
+    ];
+}
+
+
 function getPuyoCoords() {
     if (!currentPuyo) return [];
     
@@ -131,6 +151,39 @@ function getPuyoCoords() {
     return [{ x: mainX, y: mainY, color: currentPuyo.mainColor },
             { x: subX, y: subY, color: currentPuyo.subColor }];
 }
+
+/**
+ * 【新規】ゴーストぷよの落下地点を計算する関数
+ */
+function getGhostCoords() {
+    if (!currentPuyo || gameState !== 'playing') return [];
+
+    let tempPuyo = { ...currentPuyo };
+    
+    // 衝突するまで下に移動をシミュレート
+    while (true) {
+        let testPuyo = { ...tempPuyo, mainY: tempPuyo.mainY - 1 };
+        
+        const testCoords = getCoordsFromState(testPuyo);
+        
+        if (checkCollision(testCoords)) {
+            // 1段下に衝突が検出されたため、現在の tempPuyo の位置が落下地点
+            
+            // 落下地点の座標を取得
+            const finalCoords = getCoordsFromState(tempPuyo);
+            
+            // 色を付与して返す
+            finalCoords[0].color = currentPuyo.mainColor;
+            finalCoords[1].color = currentPuyo.subColor;
+            
+            return finalCoords;
+        }
+        
+        // 衝突がなければ下に移動
+        tempPuyo.mainY -= 1;
+    }
+}
+
 
 function checkCollision(coords) {
     for (const puyo of coords) {
@@ -276,12 +329,11 @@ function findConnectedPuyos() {
 }
 
 /**
- * 【修正】連鎖処理フローを修正し、ドロップ後のちぎり/落下を常に実行するようにした
+ * 連鎖処理フロー: 落下(ちぎり) -> 判定 -> 消去 -> 再帰
  */
 async function runChain() {
     
     // フェーズ1: 重力処理 (ちぎりを含む)。配置後、および連鎖後の落下を処理する。
-    // 配置直後のちぎりをここで確実に処理します。
     gravity(); 
     renderBoard(); 
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -290,7 +342,7 @@ async function runChain() {
     const groups = findConnectedPuyos();
 
     if (groups.length === 0) {
-        // 重力処理後、連鎖が検出されなかった場合、連鎖終了。
+        // 連鎖が検出されなかった場合、連鎖終了。
         gameState = 'playing';
         generateNewPuyo(); // 次のぷよを生成
         renderBoard();
@@ -381,22 +433,34 @@ function renderBoard() {
     // 落下中のぷよの座標を取得しておく
     const currentPuyoCoords = currentPuyo && gameState === 'playing' ? getPuyoCoords() : [];
 
+    // 【新規】ゴーストぷよの座標を取得しておく
+    const ghostPuyoCoords = getGhostCoords(); 
+
     // 配列インデックス y = 11 (可視領域の最上段) から y = 0 (最下段) へ逆順に描画
-    // HEIGHT - 3 は、配列の12段目 (インデックス11) を指します。
     for (let y = HEIGHT - 3; y >= 0; y--) { 
         for (let x = 0; x < WIDTH; x++) {
             const puyoElement = document.createElement('div');
             
             let cellColor = board[y][x]; 
+            let isGhost = false;
 
-            // 落下中のぷよがこのセルにあるかチェックし、色を上書き
+            // 1. ゴーストぷよがこのセルにあるかチェック
+            const puyoGhost = ghostPuyoCoords.find(p => p.x === x && p.y === y);
+            if (puyoGhost) {
+                cellColor = puyoGhost.color; 
+                isGhost = true;
+            }
+
+            // 2. 落下中のぷよがこのセルにあるかチェックし、色とクラスを上書き
+            // (ゴーストの上に落下中のぷよが描画されるように優先)
             const puyoInFlight = currentPuyoCoords.find(p => p.x === x && p.y === y);
             
             if (puyoInFlight) {
-                cellColor = puyoInFlight.color; // 落下中のぷよを優先して描画
+                cellColor = puyoInFlight.color; 
+                isGhost = false; 
             }
             
-            puyoElement.className = `puyo puyo-${cellColor}`;
+            puyoElement.className = `puyo puyo-${cellColor} ${isGhost ? 'puyo-ghost' : ''}`;
             boardElement.appendChild(puyoElement);
         }
     }
@@ -426,7 +490,7 @@ function renderNextPuyo() {
 function updateUI() {
     document.getElementById('score').textContent = score;
     
-    // 【修正】ゲームオーバーでも連鎖数を上書きしない
+    // ゲームオーバーでも連鎖数を上書きしない
     document.getElementById('chain-count').textContent = chainCount;
 }
 
