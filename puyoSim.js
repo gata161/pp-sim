@@ -6,7 +6,7 @@ const HEIGHT = 14; // 可視領域12 + 隠し領域2
 
 // ぷよの色定義
 const COLORS = {
-    EMPTY: 0,
+    EMPTY: 0, // 消しゴムとして使用
     RED: 1,
     BLUE: 2,
     GREEN: 3,
@@ -138,7 +138,7 @@ window.toggleMode = function() {
         gameState = 'editing';
         infoPanel.classList.add('edit-mode-active');
         
-        // エディットモード時の表示: 「play」 (プレイモードへの移行ボタン)
+        // エディットモード時の表示: 「play」 (エディットモードへの移行ボタン)
         if (modeToggleButton) modeToggleButton.textContent = 'play';
         
         checkMobileControlsVisibility(); // モバイル操作ボタンを非表示
@@ -216,7 +216,7 @@ function handleBoardClickEditMode(event) {
 
     // 可視領域内に制限 (0 <= y < HEIGHT - 2)
     if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT - 2) { 
-        // ぷよの配置
+        // ぷよの配置 (currentEditColorが0なら空になる)
         board[y][x] = currentEditColor;
         renderBoard(); 
     }
@@ -247,7 +247,7 @@ function getRandomPair() {
 function generateNewPuyo() {
     if (gameState !== 'playing') return;
 
-    // 【不具合修正】ネクストリストが不足している場合、新しいぷよを生成しリストに追加
+    // ネクストリストが不足している場合、新しいぷよを生成しリストに追加
     if (nextPuyoColors.length < 2) {
         while (nextPuyoColors.length < 2) {
             nextPuyoColors.push(getRandomPair());
@@ -666,9 +666,14 @@ function renderEditNextPuyos() {
             
             if (editingNextPuyos.length > listIndex) {
                 // 選択中の色を反映
-                editingNextPuyos[listIndex][puyoIndex] = currentEditColor; 
-                selectPaletteColor(currentEditColor);
-                renderEditNextPuyos(); 
+                // ただし、ネクストぷよにEMPTY(0)は設定できないようにする
+                if (currentEditColor !== COLORS.EMPTY) { 
+                    editingNextPuyos[listIndex][puyoIndex] = currentEditColor; 
+                    selectPaletteColor(currentEditColor);
+                    renderEditNextPuyos(); 
+                } else {
+                    alert("ネクストぷよに消しゴムは設定できません。");
+                }
             }
         });
         
