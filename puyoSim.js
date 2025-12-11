@@ -65,24 +65,43 @@ function initializeGame() {
 // --- ぷよの生成と操作 ---
 
 function getRandomColor() {
+    // 赤(1)から黄(4)までのランダムな色を返す
     return Math.floor(Math.random() * 4) + 1;
 }
 
-// 修正: ランダムな色の組ぷよを生成するヘルパー関数
+// ランダムな色の組ぷよを生成するヘルパー関数
 function getRandomPair() {
     return [getRandomColor(), getRandomColor()];
 }
 
+/**
+ * 【修正】ぷよの生成位置を隠し領域（インデックス12）に変更し、即時ゲームオーバー判定を追加
+ */
 function generateNewPuyo() {
+    // ゲームオーバーの場合、新しいぷよは生成しない
+    if (gameState === 'gameover') return;
+
     const [c1, c2] = nextPuyoColors.shift();
 
     currentPuyo = {
         mainColor: c1,
         subColor: c2,
         mainX: 2, 
-        mainY: 10, // 落下開始位置 (可視領域の上から2段目)
+        mainY: HEIGHT - 2, // 修正: 落下開始位置を隠し領域の下端 (配列インデックス12) に変更
         rotation: 0 
     };
+    
+    // 【修正】ぷよ生成時に、開始位置が占有されていないかチェック（ゲームオーバー判定）
+    const startingCoords = getPuyoCoords();
+    // 衝突チェック時、まだ盤面に配置されていないぷよ自体との衝突は無視するため、
+    // checkCollisionは正しく機能します。
+    if (checkCollision(startingCoords)) {
+        gameState = 'gameover';
+        alert('ゲームオーバーです！');
+        updateUI();
+        renderBoard();
+        return; 
+    }
 
     // 新しいネクストぷよを生成し、リストに追加
     nextPuyoColors.push(getRandomPair());
@@ -107,9 +126,13 @@ function getPuyoCoords() {
 
 function checkCollision(coords) {
     for (const puyo of coords) {
+        // 画面外チェック (横)
         if (puyo.x < 0 || puyo.x >= WIDTH) return true;
+        // 画面外チェック (下)
         if (puyo.y < 0) return true;
 
+        // 既にぷよがある場所との衝突チェック
+        // puyo.y は HEIGHT (14) まで到達し得る
         if (puyo.y < HEIGHT && puyo.y >= 0 && board[puyo.y][puyo.x] !== COLORS.EMPTY) {
             return true;
         }
@@ -179,7 +202,8 @@ function lockPuyo() {
     let isGameOver = false;
 
     for (const puyo of coords) {
-        if (puyo.y >= HEIGHT - 2) {
+        // ぷよが隠し領域(12段目以上)に固定されたらゲームオーバー
+        if (puyo.y >= HEIGHT - 2) { 
             isGameOver = true;
             break;
         }
