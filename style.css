@@ -3,22 +3,23 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f0f0f0;
+    background-color: #111; /* 黒基調 */
+    color: #fff; /* テキストは白 */
     margin: 0;
     padding: 20px;
 }
 
 h1 {
-    color: #333;
+    color: #f0f0f0;
 }
 
 #game-container {
     display: flex;
     gap: 20px;
-    background-color: #fff;
+    background-color: #222; /* 濃いめの黒 */
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    box-shadow: none;
 }
 
 /* 盤面 */
@@ -27,7 +28,7 @@ h1 {
     grid-template-rows: repeat(12, 30px); /* 12段（可視領域） */
     grid-template-columns: repeat(6, 30px); /* 6列 */
     border: 3px solid #666;
-    background-color: #eee;
+    background-color: #000; /* 盤面は真っ黒 */
 }
 
 /* ぷよ（基本スタイル） */
@@ -43,7 +44,7 @@ h1 {
     transition: transform 0.1s ease-out; 
 }
 
-/* ぷよの色定義 (ぷよぷよテトリス2準拠の色) */
+/* ぷよの色定義 (変更なし) */
 .puyo-1 { background-color: #ff4444; border-color: #aa0000; } /* 赤 */
 .puyo-2 { background-color: #4444ff; border-color: #0000aa; } /* 青 */
 .puyo-3 { background-color: #44ff44; border-color: #00aa00; } /* 緑 */
@@ -69,28 +70,30 @@ h1 {
 
 .info-box {
     padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    border: 1px solid #444; /* 枠線も暗めに */
+    background-color: #333; /* 背景を暗く */
+    border-radius: 0;
     text-align: center;
 }
 
 .info-box h2 {
     margin: 0 0 5px 0;
     font-size: 1.1em;
-    color: #555;
+    color: #ccc;
 }
 
 #score, #chain-count {
     font-size: 1.8em;
     font-weight: bold;
-    color: #e63946;
+    color: #e63946; /* スコアの色は目立つように維持 */
 }
 
 /* 操作説明 */
 #controls-panel {
     margin-top: 20px;
     padding: 15px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    background-color: #222; /* 暗い背景 */
+    border-radius: 0;
+    box-shadow: none;
+    border: 1px solid #444;
 }
