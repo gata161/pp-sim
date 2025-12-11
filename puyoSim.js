@@ -57,10 +57,24 @@ function initializeGame() {
     
     updateUI();
     
-    document.addEventListener('keydown', handleInput);
+    // キーボードイベントリスナーは一度だけ設定
+    if (!document.initializedKeyHandler) {
+        document.addEventListener('keydown', handleInput);
+        document.initializedKeyHandler = true;
+    }
     
     renderBoard();
 }
+
+/**
+ * 【新規追加】盤面リセット関数
+ */
+function resetGame() {
+    // 進行中の連鎖処理を停止し、ゲームを初期状態に戻す
+    initializeGame();
+    alert('盤面をリセットしました。');
+}
+
 
 // --- ぷよの生成と操作 ---
 
@@ -74,9 +88,6 @@ function getRandomPair() {
     return [getRandomColor(), getRandomColor()];
 }
 
-/**
- * 【修正】ぷよの生成位置を可視領域の最上段（インデックス11）に変更し、即時ゲームオーバー判定を追加
- */
 function generateNewPuyo() {
     if (gameState === 'gameover') return;
 
@@ -86,7 +97,7 @@ function generateNewPuyo() {
         mainColor: c1,
         subColor: c2,
         mainX: 2, 
-        mainY: HEIGHT - 3, // 修正: 落下開始位置を可視領域の最上段 (配列インデックス11) に変更
+        mainY: HEIGHT - 3, // 落下開始位置を可視領域の最上段 (配列インデックス11) に設定
         rotation: 0 
     };
     
@@ -123,10 +134,8 @@ function getPuyoCoords() {
 
 function checkCollision(coords) {
     for (const puyo of coords) {
-        // 画面外チェック (横)
-        if (puyo.x < 0 || puyo.x >= WIDTH) return true;
-        // 画面外チェック (下)
-        if (puyo.y < 0) return true;
+        // 画面外チェック (横, 下)
+        if (puyo.x < 0 || puyo.x >= WIDTH || puyo.y < 0) return true;
 
         // 既にぷよがある場所との衝突チェック
         if (puyo.y < HEIGHT && puyo.y >= 0 && board[puyo.y][puyo.x] !== COLORS.EMPTY) {
@@ -175,7 +184,7 @@ function rotatePuyo() {
     for (let i = 0; i < 4; i++) {
         const newRotation = (currentPuyo.rotation + 1) % 4;
         
-        // 回転試行 (回転できない場合、横にずらして回転させるワイルドローテーションは未実装)
+        // 回転試行
         if (movePuyo(0, 0, newRotation)) return true; 
         if (movePuyo(1, 0, newRotation)) return true; 
         if (movePuyo(-1, 0, newRotation)) return true; 
@@ -272,7 +281,7 @@ function findConnectedPuyos() {
 async function runChain() {
     
     // フェーズ1: 重力処理 (ちぎりを含む)。配置後、および連鎖後の落下を処理する。
-    // ちぎりが発生した場合は、ここで盤面が更新される。
+    // 配置直後のちぎりをここで確実に処理します。
     gravity(); 
     renderBoard(); 
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -283,7 +292,7 @@ async function runChain() {
     if (groups.length === 0) {
         // 重力処理後、連鎖が検出されなかった場合、連鎖終了。
         gameState = 'playing';
-        generateNewPuyo(); // 次のぷよを生成（generateNewPuyo内でゲームオーバー判定も走る）
+        generateNewPuyo(); // 次のぷよを生成
         renderBoard();
         return;
     }
@@ -416,11 +425,9 @@ function renderNextPuyo() {
 
 function updateUI() {
     document.getElementById('score').textContent = score;
+    
+    // 【修正】ゲームオーバーでも連鎖数を上書きしない
     document.getElementById('chain-count').textContent = chainCount;
-
-    if (gameState === 'gameover') {
-         document.getElementById('chain-count').textContent = '終了';
-    }
 }
 
 // --- 入力処理 ---
@@ -450,6 +457,9 @@ function handleInput(event) {
             break;
     }
 }
+
+// グローバルスコープに関数を公開
+window.resetGame = resetGame;
 
 // ゲーム開始
 document.addEventListener('DOMContentLoaded', initializeGame);
