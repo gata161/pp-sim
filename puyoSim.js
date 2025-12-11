@@ -68,21 +68,25 @@ function initializeGame() {
     chainCount = 0;
     gameState = 'playing';
 
-    // ネクストぷよリストを完全にランダムなぷよで初期化 (最低2個)
+    // ネクストぷよリストを完全にランダムなぷよで初期化 (最低2組)
     nextPuyoColors = [getRandomPair(), getRandomPair()];
     // エディット用のネクストリストも初期化
     editingNextPuyos = JSON.parse(JSON.stringify(nextPuyoColors));
 
-    // 初期状態はプレイモードなので、エディットモードへのアイコンを設定
-    const modeIcon = document.getElementById('mode-icon');
-    if (modeIcon) modeIcon.className = 'icon-edit';
+    // 初期状態はプレイモードなので、エディットモードへのテキストを設定
+    const modeToggleButton = document.getElementById('mode-toggle-button');
+    if (modeToggleButton) {
+        // プレイモード時の表示: 「edit」 (エディットモードへの移行ボタン)
+        modeToggleButton.textContent = 'edit';
+    }
     
     // #info-panelのクラスをリセット
     const infoPanel = document.getElementById('info-panel');
     if (infoPanel) infoPanel.classList.remove('edit-mode-active');
 
 
-    generateNewPuyo();
+    // 最初のぷよを生成
+    generateNewPuyo(); 
     
     updateUI();
     
@@ -126,14 +130,16 @@ window.resetGame = function() {
  */
 window.toggleMode = function() {
     const infoPanel = document.getElementById('info-panel');
-    const modeIcon = document.getElementById('mode-icon');
+    const modeToggleButton = document.getElementById('mode-toggle-button');
     const boardElement = document.getElementById('puyo-board');
     
     if (gameState === 'playing' || gameState === 'gameover') {
         // -> エディットモードへ切り替え
         gameState = 'editing';
         infoPanel.classList.add('edit-mode-active');
-        if (modeIcon) modeIcon.className = 'icon-play'; // プレイモードへ誘導するアイコン (コントローラー)
+        
+        // エディットモード時の表示: 「play」 (プレイモードへの移行ボタン)
+        if (modeToggleButton) modeToggleButton.textContent = 'play';
         
         checkMobileControlsVisibility(); // モバイル操作ボタンを非表示
         
@@ -148,7 +154,9 @@ window.toggleMode = function() {
         // -> プレイモードへ切り替え
         gameState = 'playing';
         infoPanel.classList.remove('edit-mode-active');
-        if (modeIcon) modeIcon.className = 'icon-edit'; // エディットモードへ誘導するアイコン (ペン)
+        
+        // プレイモード時の表示: 「edit」 (エディットモードへの移行ボタン)
+        if (modeToggleButton) modeToggleButton.textContent = 'edit';
         
         checkMobileControlsVisibility(); // モバイル操作ボタンを再表示 (画面幅に応じて)
 
@@ -164,7 +172,7 @@ window.toggleMode = function() {
 }
 
 
-// --- エディットモード機能 ---
+// --- エディットモード機能 (前回のコードを維持) ---
 
 function setupEditModeListeners() {
     const palette = document.getElementById('color-palette');
@@ -239,7 +247,13 @@ function getRandomPair() {
 function generateNewPuyo() {
     if (gameState !== 'playing') return;
 
-    // ネクストリストから1組取り出し、新しい1組を追加
+    // 【不具合修正の確認箇所】ネクストリストから1組取り出し、新しい1組を追加
+    if (nextPuyoColors.length < 2) {
+        // ネクストが不足している場合は強制的に生成 (念のため)
+        while (nextPuyoColors.length < 2) {
+            nextPuyoColors.push(getRandomPair());
+        }
+    }
     const [c1, c2] = nextPuyoColors.shift();
 
     currentPuyo = {
@@ -262,6 +276,7 @@ function generateNewPuyo() {
     nextPuyoColors.push(getRandomPair());
 }
 
+// ... (getPuyoCoords, getCoordsFromState, getGhostCoords, checkCollision, movePuyo, rotatePuyoCW, rotatePuyoCCW, hardDrop, lockPuyo, findConnectedPuyos, runChain, calculateScore, gravity は省略 - 前回のコードと同様)
 function getCoordsFromState(puyoState) {
     const { mainX, mainY, rotation } = puyoState;
     let subX = mainX;
@@ -366,9 +381,6 @@ function movePuyo(dx, dy, newRotation, shouldRender = true) {
     return false;
 }
 
-/**
- * 時計回り回転 (CW) (Bボタンに割り当て) (グローバル公開)
- */
 window.rotatePuyoCW = function() {
     if (gameState !== 'playing') return false;
     const newRotation = (currentPuyo.rotation + 1) % 4;
@@ -378,9 +390,6 @@ window.rotatePuyoCW = function() {
     return false;
 }
 
-/**
- * 反時計回り回転 (CCW) (Aボタンに割り当て) (グローバル公開)
- */
 window.rotatePuyoCCW = function() {
     if (gameState !== 'playing') return false;
     const newRotation = (currentPuyo.rotation - 1 + 4) % 4;
@@ -390,9 +399,6 @@ window.rotatePuyoCCW = function() {
     return false;
 }
 
-/**
- * ハードドロップ (グローバル公開)
- */
 window.hardDrop = function() {
     if (gameState !== 'playing' || !currentPuyo) return;
 
@@ -436,7 +442,6 @@ function lockPuyo() {
     runChain();
 }
 
-// --- 連鎖判定ロジック (DFS) ---
 function findConnectedPuyos() {
     let disappearingGroups = [];
     let visited = Array(HEIGHT).fill(0).map(() => Array(WIDTH).fill(false));
@@ -476,9 +481,6 @@ function findConnectedPuyos() {
     return disappearingGroups;
 }
 
-/**
- * 連鎖処理フロー: 落下(ちぎり) -> 判定 -> 消去 -> 再帰
- */
 async function runChain() {
     
     // フェーズ1: 重力処理 (ちぎりを含む)。
@@ -546,10 +548,6 @@ function calculateScore(groups, currentChain) {
     return totalScore;
 }
 
-
-/**
- * ぷよぷよ標準の重力処理（列圧縮＝ちぎり）
- */
 function gravity() {
     for (let x = 0; x < WIDTH; x++) {
         let newColumn = [];
@@ -573,7 +571,7 @@ function gravity() {
 }
 
 
-// --- 描画とUI更新 ---
+// --- 描画とUI更新 (前回のコードを維持) ---
 
 function renderBoard() {
     const boardElement = document.getElementById('puyo-board');
