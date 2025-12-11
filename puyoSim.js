@@ -61,7 +61,7 @@ function initializeGame() {
     if (!document.initializedKeyHandler) {
         document.addEventListener('keydown', handleInput);
         
-        // 【重要：イベントリスナーの確認】
+        // 【重要：イベントリスナーの確認と割り当て】
         const btnLeft = document.getElementById('btn-left');
         const btnRight = document.getElementById('btn-right');
         const btnRotateCW = document.getElementById('btn-rotate-cw'); // Aボタン
@@ -72,12 +72,12 @@ function initializeGame() {
         if (btnRight) btnRight.addEventListener('click', () => movePuyo(1, 0));
         
         // Aボタン (左回転) -> 反時計回り (CCW) を実行
-        if (btnRotateCW) btnRotateCW.addEventListener('click', rotatePuyoCCW); 
+        if (btnRotateCW) btnRotateCW.addEventListener('click', window.rotatePuyoCCW); 
         // Bボタン (右回転) -> 時計回り (CW) を実行
-        if (btnRotateCCW) btnRotateCCW.addEventListener('click', rotatePuyoCW); 
+        if (btnRotateCCW) btnRotateCCW.addEventListener('click', window.rotatePuyoCW); 
         
-        // ハードドロップボタンは確実にhardDropを呼び出す
-        if (btnHardDrop) btnHardDrop.addEventListener('click', hardDrop);
+        // ハードドロップボタンは確実にhardDropを呼び出す (グローバル関数を参照)
+        if (btnHardDrop) btnHardDrop.addEventListener('click', window.hardDrop);
         
         document.initializedKeyHandler = true;
     }
@@ -86,9 +86,9 @@ function initializeGame() {
 }
 
 /**
- * 盤面リセット関数
+ * 盤面リセット関数 (グローバル公開)
  */
-window.resetGame = function() { // グローバルに公開
+window.resetGame = function() { 
     initializeGame();
     alert('盤面をリセットしました。');
 }
@@ -206,7 +206,10 @@ function checkCollision(coords) {
     return false;
 }
 
-function movePuyo(dx, dy, newRotation) {
+/**
+ * ぷよを移動させる。shouldRender=falseの場合、描画処理をスキップする。
+ */
+function movePuyo(dx, dy, newRotation, shouldRender = true) {
     if (gameState !== 'playing' || !currentPuyo) return false;
 
     const { mainX, mainY, rotation } = currentPuyo;
@@ -233,14 +236,17 @@ function movePuyo(dx, dy, newRotation) {
         if (newRotation !== undefined) {
             currentPuyo.rotation = newRotation;
         }
-        renderBoard();
+        
+        if (shouldRender) { // ハードドロップ中はfalseになる
+            renderBoard();
+        }
         return true;
     }
     return false;
 }
 
 /**
- * 時計回り回転 (CW) (Bボタンに割り当て)
+ * 時計回り回転 (CW) (Bボタンに割り当て) (グローバル公開)
  */
 window.rotatePuyoCW = function() {
     if (gameState !== 'playing' || !currentPuyo) return false;
@@ -248,7 +254,7 @@ window.rotatePuyoCW = function() {
     // 時計回り: +1
     const newRotation = (currentPuyo.rotation + 1) % 4;
         
-    // 回転試行
+    // 回転試行 (描画はデフォルトで実行される)
     if (movePuyo(0, 0, newRotation)) return true; 
     if (movePuyo(1, 0, newRotation)) return true; 
     if (movePuyo(-1, 0, newRotation)) return true; 
@@ -257,7 +263,7 @@ window.rotatePuyoCW = function() {
 }
 
 /**
- * 反時計回り回転 (CCW) (Aボタンに割り当て)
+ * 反時計回り回転 (CCW) (Aボタンに割り当て) (グローバル公開)
  */
 window.rotatePuyoCCW = function() {
     if (gameState !== 'playing' || !currentPuyo) return false;
@@ -265,7 +271,7 @@ window.rotatePuyoCCW = function() {
     // 反時計回り: -1 
     const newRotation = (currentPuyo.rotation - 1 + 4) % 4;
         
-    // 回転試行
+    // 回転試行 (描画はデフォルトで実行される)
     if (movePuyo(0, 0, newRotation)) return true; 
     if (movePuyo(1, 0, newRotation)) return true; 
     if (movePuyo(-1, 0, newRotation)) return true; 
@@ -273,14 +279,19 @@ window.rotatePuyoCCW = function() {
     return false;
 }
 
-
-function hardDrop() {
+/**
+ * ハードドロップ (グローバル公開)
+ */
+window.hardDrop = function() {
     if (gameState !== 'playing' || !currentPuyo) return;
 
-    // 衝突するまで下に移動 (ソフトドロップを繰り返すことで実現)
-    while (movePuyo(0, -1));
+    // 衝突するまで下に移動 (描画はスキップ: false)
+    while (movePuyo(0, -1, undefined, false)); 
 
-    lockPuyo();
+    // 最終的な位置で一度だけ描画
+    renderBoard(); 
+    
+    lockPuyo(); // 即座に固定
 }
 
 function lockPuyo() {
@@ -490,7 +501,7 @@ function renderBoard() {
 }
 
 function renderNextPuyo() {
-    // 【修正】ネクストぷよを2個表示に対応
+    // 【再確認】ネクストぷよを2個表示に対応
     const next1Element = document.getElementById('next-puyo-1');
     const next2Element = document.getElementById('next-puyo-2');
     
@@ -510,15 +521,15 @@ function renderNextPuyo() {
     // Next 1: 次に落ちてくるぷよ (nextPuyoColors[0])
     if (nextPuyoColors.length >= 1) {
         const [c1_1, c1_2] = nextPuyoColors[0];
-        next1Element.appendChild(createPuyo(c1_1)); // puyo1
-        next1Element.appendChild(createPuyo(c1_2)); // puyo2
+        next1Element.appendChild(createPuyo(c1_1)); 
+        next1Element.appendChild(createPuyo(c1_2)); 
     }
 
     // Next 2: その次に落ちてくるぷよ (nextPuyoColors[1])
     if (nextPuyoColors.length >= 2) {
         const [c2_1, c2_2] = nextPuyoColors[1];
-        next2Element.appendChild(createPuyo(c2_1)); // puyo1
-        next2Element.appendChild(createPuyo(c2_2)); // puyo2
+        next2Element.appendChild(createPuyo(c2_1)); 
+        next2Element.appendChild(createPuyo(c2_2)); 
     }
 }
 
