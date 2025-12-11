@@ -26,11 +26,11 @@ body {
     border: 3px solid #666;
     background-color: #000; /* 盤面は真っ黒 */
 
-    /* 【新規追加】非常に薄いマス目の設定 */
+    /* 非常に薄いマス目の設定 */
     background-image: linear-gradient(to right, #1a1a1a 1px, transparent 1px),
                       linear-gradient(to bottom, #1a1a1a 1px, transparent 1px);
-    background-size: 30px 30px; /* 各セルのサイズに合わせる */
-    background-position: -1px -1px; /* 枠線と重ならないように微調整 */
+    background-size: 30px 30px; 
+    background-position: -1px -1px; 
 }
 
 /* ぷよ（基本スタイル） */
@@ -56,9 +56,9 @@ body {
 
 /* ゴーストぷよのスタイル */
 .puyo-ghost {
-    opacity: 0.3; /* 薄く表示 */
-    border: 1px solid #777 !important; /* 枠線も薄く */
-    transform: scale(0.95); /* わずかに小さくして差を出す */
+    opacity: 0.3; 
+    border: 1px solid #777 !important; 
+    transform: scale(0.95); 
 }
 
 /* ネクストぷよの表示 */
@@ -124,31 +124,31 @@ body {
     background-color: #c9303d;
 }
 
-/* 【修正】モバイル操作ボタンの基本スタイル */
-#mobile-controls {
+
+/* 以前の多段コントロールを非表示に */
+#move-drop-controls, #rotation-controls {
     display: none; 
+}
+
+
+/* 【最終修正】モバイル操作ボタンの基本スタイル (1段、正方形) */
+#mobile-controls {
+    display: none; /* 初期状態では非表示 (PC優先) */
     margin-top: 20px;
     width: 100%;
-    max-width: 400px;
-    flex-direction: column;
-    gap: 10px;
-}
-
-#move-controls {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-#action-controls {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
+    max-width: 350px; /* 5つの正方形ボタンが収まるサイズに調整 */
+    flex-direction: row; 
+    justify-content: space-between; 
+    gap: 5px; /* ギャップを小さく */
 }
 
 .mobile-btn {
-    padding: 15px 10px;
-    font-size: 1.1em;
+    /* 正方形のサイズ */
+    width: 65px; 
+    height: 65px; 
+    padding: 0;
+    
+    font-size: 1em;
     font-weight: bold;
     color: white;
     border: none;
@@ -157,31 +157,24 @@ body {
     background-color: #457b9d; /* 青系のコントロールカラー */
     transition: background-color 0.1s;
     touch-action: manipulation;
+    
+    flex-shrink: 0; /* 縮小させず */
+    flex-grow: 1; /* 均等に広げる */
 }
 
 .mobile-btn:active {
     background-color: #1d3557;
 }
 
-/* 移動・ソフトドロップボタン */
-.move-btn {
-    flex-grow: 1;
-}
-
-/* 回転ボタン */
-.rotate-btn {
-    flex-grow: 1.5; /* A/Bボタンは少し大きく */
-}
-
 /* ハードドロップボタン */
 .drop-btn {
-    background-color: #e63946; /* 赤系のDROPボタンカラー */
-    flex-grow: 2; 
+    background-color: #e63946; 
 }
 
 .drop-btn:active {
     background-color: #c9303d;
 }
+
 
 /* 画面幅が狭いときのレイアウト調整とボタン表示 (モバイル優先) */
 @media (max-width: 650px) {
