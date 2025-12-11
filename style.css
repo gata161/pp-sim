@@ -124,7 +124,6 @@ body {
     background-color: #c9303d;
 }
 
-
 /* 以前の多段コントロールを非表示に */
 #move-drop-controls, #rotation-controls {
     display: none; 
@@ -136,10 +135,10 @@ body {
     display: none; /* 初期状態では非表示 (PC優先) */
     margin-top: 20px;
     width: 100%;
-    max-width: 350px; /* 5つの正方形ボタンが収まるサイズに調整 */
+    max-width: 350px; 
     flex-direction: row; 
     justify-content: space-between; 
-    gap: 5px; /* ギャップを小さく */
+    gap: 5px; 
 }
 
 .mobile-btn {
@@ -158,8 +157,8 @@ body {
     transition: background-color 0.1s;
     touch-action: manipulation;
     
-    flex-shrink: 0; /* 縮小させず */
-    flex-grow: 1; /* 均等に広げる */
+    flex-shrink: 0; 
+    flex-grow: 1; 
 }
 
 .mobile-btn:active {
@@ -169,10 +168,17 @@ body {
 /* ハードドロップボタン */
 .drop-btn {
     background-color: #e63946; 
+    font-size: 2em; /* 矢印を大きく表示 */
+    line-height: 1;
 }
 
 .drop-btn:active {
     background-color: #c9303d;
+}
+
+/* 回転ボタンのラベル（日本語を含む）が収まるようにフォントサイズを調整 */
+.rotate-btn {
+    font-size: 0.8em; 
 }
 
 
