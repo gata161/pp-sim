@@ -50,7 +50,7 @@ function initializeGame() {
     chainCount = 0;
     gameState = 'playing';
 
-    // 修正: ネクストぷよリストを完全にランダムなぷよで初期化
+    // ネクストぷよリストを完全にランダムなぷよで初期化
     nextPuyoColors = [getRandomPair(), getRandomPair()];
 
     generateNewPuyo();
@@ -75,10 +75,9 @@ function getRandomPair() {
 }
 
 /**
- * 【修正】ぷよの生成位置を隠し領域（インデックス12）に変更し、即時ゲームオーバー判定を追加
+ * 【修正】ぷよの生成位置を可視領域の最上段（インデックス11）に変更し、即時ゲームオーバー判定を追加
  */
 function generateNewPuyo() {
-    // ゲームオーバーの場合、新しいぷよは生成しない
     if (gameState === 'gameover') return;
 
     const [c1, c2] = nextPuyoColors.shift();
@@ -87,14 +86,12 @@ function generateNewPuyo() {
         mainColor: c1,
         subColor: c2,
         mainX: 2, 
-        mainY: HEIGHT - 2, // 修正: 落下開始位置を隠し領域の下端 (配列インデックス12) に変更
+        mainY: HEIGHT - 3, // 修正: 落下開始位置を可視領域の最上段 (配列インデックス11) に変更
         rotation: 0 
     };
     
-    // 【修正】ぷよ生成時に、開始位置が占有されていないかチェック（ゲームオーバー判定）
+    // ぷよ生成時に、開始位置が占有されていないかチェック（ゲームオーバー判定）
     const startingCoords = getPuyoCoords();
-    // 衝突チェック時、まだ盤面に配置されていないぷよ自体との衝突は無視するため、
-    // checkCollisionは正しく機能します。
     if (checkCollision(startingCoords)) {
         gameState = 'gameover';
         alert('ゲームオーバーです！');
@@ -115,10 +112,10 @@ function getPuyoCoords() {
     let subY = mainY;
 
     // rotationに基づき、子ぷよの相対座標を計算
-    if (rotation === 0) subY = mainY + 1; 
-    if (rotation === 1) subX = mainX - 1; 
-    if (rotation === 2) subY = mainY - 1; 
-    if (rotation === 3) subX = mainX + 1; 
+    if (rotation === 0) subY = mainY + 1; // 下
+    if (rotation === 1) subX = mainX - 1; // 左
+    if (rotation === 2) subY = mainY - 1; // 上
+    if (rotation === 3) subX = mainX + 1; // 右
 
     return [{ x: mainX, y: mainY, color: currentPuyo.mainColor },
             { x: subX, y: subY, color: currentPuyo.subColor }];
@@ -132,7 +129,6 @@ function checkCollision(coords) {
         if (puyo.y < 0) return true;
 
         // 既にぷよがある場所との衝突チェック
-        // puyo.y は HEIGHT (14) まで到達し得る
         if (puyo.y < HEIGHT && puyo.y >= 0 && board[puyo.y][puyo.x] !== COLORS.EMPTY) {
             return true;
         }
@@ -179,6 +175,7 @@ function rotatePuyo() {
     for (let i = 0; i < 4; i++) {
         const newRotation = (currentPuyo.rotation + 1) % 4;
         
+        // 回転試行 (回転できない場合、横にずらして回転させるワイルドローテーションは未実装)
         if (movePuyo(0, 0, newRotation)) return true; 
         if (movePuyo(1, 0, newRotation)) return true; 
         if (movePuyo(-1, 0, newRotation)) return true; 
@@ -190,6 +187,7 @@ function rotatePuyo() {
 function hardDrop() {
     if (gameState !== 'playing' || !currentPuyo) return;
 
+    // 衝突するまで下に移動
     while (movePuyo(0, -1));
 
     lockPuyo();
@@ -223,6 +221,8 @@ function lockPuyo() {
     currentPuyo = null;
     gameState = 'chaining';
     chainCount = 0;
+    
+    // ぷよ固定後、連鎖/落下処理を開始
     runChain();
 }
 
@@ -266,19 +266,29 @@ function findConnectedPuyos() {
     return disappearingGroups;
 }
 
+/**
+ * 【修正】連鎖処理フローを修正し、ドロップ後のちぎり/落下を常に実行するようにした
+ */
 async function runChain() {
+    
+    // フェーズ1: 重力処理 (ちぎりを含む)。配置後、および連鎖後の落下を処理する。
+    // ちぎりが発生した場合は、ここで盤面が更新される。
+    gravity(); 
+    renderBoard(); 
     await new Promise(resolve => setTimeout(resolve, 300));
-
+    
+    // フェーズ2: 連鎖チェック
     const groups = findConnectedPuyos();
 
     if (groups.length === 0) {
-        // 連鎖終了
+        // 重力処理後、連鎖が検出されなかった場合、連鎖終了。
         gameState = 'playing';
-        generateNewPuyo();
+        generateNewPuyo(); // 次のぷよを生成（generateNewPuyo内でゲームオーバー判定も走る）
         renderBoard();
         return;
     }
 
+    // フェーズ3: ぷよの削除とスコア計算
     chainCount++;
 
     let chainScore = calculateScore(groups, chainCount);
@@ -291,20 +301,12 @@ async function runChain() {
         });
     });
 
-    renderBoard(); // 削除後の盤面を描画 (空きスペースができる)
+    renderBoard(); // 削除後の盤面を描画 (消滅演出)
     updateUI();
 
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    // ぷよの落下 (データを更新)
-    gravity(); 
-
-    // 落下後の盤面を描画し、ちぎり動作を画面に反映させます。
-    renderBoard(); 
-
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    // 再帰的に次の連鎖をチェック
+    // フェーズ4: 再帰的に次の連鎖をチェック (重力処理から再スタート)
     runChain();
 }
 
