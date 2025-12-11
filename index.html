@@ -13,7 +13,9 @@
 
         <div id="info-panel">
             <div id="mode-controls">
-                <button id="mode-toggle-button" onclick="toggleMode()">エディットモードへ</button>
+                <button id="mode-toggle-button" onclick="toggleMode()">
+                    <span id="mode-icon" class="icon-edit"></span> 
+                </button>
             </div>
             
             <div id="play-mode-info">
@@ -33,7 +35,6 @@
             </div>
 
             <div id="edit-mode-info" style="display:none;">
-                
                 <div class="info-box edit-section">
                     <h2>パレット (タップで選択)</h2>
                     <div id="color-palette">
@@ -48,21 +49,8 @@
                     </div>
                     <button id="apply-next-button" onclick="applyNextPuyos()">ネクスト設定を反映</button>
                 </div>
-                
             </div>
         </div>
-    </div>
-
-    <div id="controls-panel">
-        <p><strong>操作キー:</strong></p>
-        <ul>
-            <li>← / → : 移動</li>
-            <li>Z : 時計回り回転 (B)</li>
-            <li>X : 反時計回り回転 (A)</li>
-            <li>↓ : ソフトドロップ (高速落下)</li>
-            <li>Space : ハードドロップ (即固定 & 連鎖開始)</li>
-        </ul>
-        <button id="reset-button" onclick="resetGame()">盤面リセット</button>
     </div>
 
     <div id="mobile-controls">
