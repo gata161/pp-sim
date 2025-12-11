@@ -33,11 +33,25 @@
         <p><strong>操作キー:</strong></p>
         <ul>
             <li>← / → : 移動</li>
-            <li>Z / X : 回転</li>
+            <li>Z : 時計回り回転 (A)</li>
+            <li>X : 反時計回り回転 (B)</li>
             <li>↓ : ソフトドロップ (高速落下)</li>
             <li>Space : ハードドロップ (即固定 & 連鎖開始)</li>
         </ul>
         <button id="reset-button" onclick="resetGame()">盤面リセット</button>
+    </div>
+
+    <div id="mobile-controls">
+        <div id="move-controls">
+            <button id="btn-left" class="mobile-btn move-btn">←</button>
+            <button id="btn-soft-drop" class="mobile-btn move-btn">↓</button>
+            <button id="btn-right" class="mobile-btn move-btn">→</button>
+        </div>
+        <div id="action-controls">
+            <button id="btn-rotate-ccw" class="mobile-btn rotate-btn">B</button>
+            <button id="btn-rotate-cw" class="mobile-btn rotate-btn">A</button>
+            <button id="btn-hard-drop" class="mobile-btn drop-btn">DROP</button>
+        </div>
     </div>
 
     <script src="puyoSim.js"></script>
