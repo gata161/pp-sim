@@ -68,7 +68,7 @@ body {
     background-color: transparent !important;
     box-shadow: none !important;
     border: 2px dashed #999;
-    opacity: 0.5; 
+    opacity: 0.5;
 }
 /* 消しゴムボタンのスタイル */
 .erase-puyo {
@@ -140,7 +140,7 @@ body {
 #play-stats-info {
     flex-basis: 50%; 
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
     gap: 5px;
 }
 #play-stats-info .info-box {
