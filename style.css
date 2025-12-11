@@ -9,12 +9,6 @@ body {
     padding: 20px;
 }
 
-/* h1 は index.html から削除しましたが、念のためスタイルを残しておきます
-h1 {
-    color: #f0f0f0;
-}
-*/
-
 #game-container {
     display: flex;
     gap: 20px;
@@ -53,6 +47,13 @@ h1 {
 .puyo-4 { background-color: #ffff44; border-color: #aaaa00; } /* 黄 */
 .puyo-5 { background-color: #cccccc; border-color: #999999; } /* 仮のおじゃまぷよ */
 .puyo-0 { background-color: transparent; border: none; } /* 空 */
+
+/* 【新規追加】ゴーストぷよのスタイル */
+.puyo-ghost {
+    opacity: 0.3; /* 薄く表示 */
+    border: 1px solid #777 !important; /* 枠線も薄く */
+    transform: scale(0.95); /* わずかに小さくして差を出す */
+}
 
 /* ネクストぷよの表示 */
 #next-puyo {
