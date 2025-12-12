@@ -32,17 +32,17 @@ body {
     align-items: flex-start;
 }
 
-/* ぷよのセルサイズの基準を 30px に設定 */
+/* ぷよのセルサイズの基準を 40px に拡大 */
 #puyo-board {
-    /* 1セルの基準サイズを 30px に拡大 */
-    --puyo-cell-size: 30px; 
+    /* ★ 変更 A: 1セルの基準サイズを 40px に拡大 ★ */
+    --puyo-cell-size: 40px; 
     
     display: grid;
     /* 縦方向は 12 行で固定 */
     grid-template-rows: repeat(12, var(--puyo-cell-size)); 
     
-    /* ★ 修正 1: grid-template-columns を絶対値 30px で固定 (6列 * 30px = 180px) ★ */
-    grid-template-columns: repeat(6, 30px) !important; 
+    /* grid-template-columns も 40px に基づいて再計算 (6列 * 40px = 240px) */
+    grid-template-columns: repeat(6, 40px) !important; 
     
     border: 3px solid #666;
     background-color: #000;
@@ -52,14 +52,14 @@ body {
     background-size: var(--puyo-cell-size) var(--puyo-cell-size); 
     background-position: -1px -1px; 
     
-    /* ★ 修正 2: 盤面全体の幅を絶対値 180px で固定 ★ */
-    width: 180px !important; 
-    /* ★ 修正 3: 盤面全体の高さを絶対値 360px で固定 (12行 * 30px) ★ */
-    height: 360px; 
+    /* ★ 変更 A: 盤面全体の幅を絶対値 240px で固定 (6*40) ★ */
+    width: 240px !important; 
+    /* ★ 変更 A: 盤面全体の高さを絶対値 480px で固定 (12行 * 40px) ★ */
+    height: 480px; 
     
-    /* ★ 修正 4 (最重要): Flexbox設定の成長比率をゼロにし、基準幅を180pxに固定 ★ */
-    flex: 0 0 180px; 
-    min-width: 180px; 
+    /* Flexbox設定の成長比率をゼロにし、基準幅を240pxに固定 */
+    flex: 0 0 240px; 
+    min-width: 240px; 
     margin: 0;
     
     max-width: 100%; 
@@ -148,10 +148,10 @@ body {
     align-items: center;
 }
 
-/* NEXT内のぷよのサイズ */
+/* ★ 変更 B: NEXT内のぷよのサイズを 30px に拡大 ★ */
 #play-next-info .puyo, #edit-next-info .puyo {
-    width: 20px; 
-    height: 20px; 
+    width: 30px; 
+    height: 30px; 
 }
 
 /* 2. SCORE/CHAIN (縦並びを維持) */
@@ -261,11 +261,9 @@ body {
 .puyo-4 { background-color: #fca311; } 
 .puyo-5 { background-color: #ccc; } 
 
-/* ★ 変更点: puyo-0 (消しゴム/透明) の見た目を強調 ★ */
 .puyo-0 { 
     background-color: transparent !important;
     box-shadow: none !important;
-    /* パレットで選択されていることがわかるように、枠線を追加 */
     border: 2px dashed #666; 
 }
 
