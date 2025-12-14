@@ -9,7 +9,6 @@
     <meta name="application-name" content="Puyo Sim">
     
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png.png">
-    
     <link rel="icon" type="image/png" sizes="192x192" href="android-icon-192x192.png.png">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,7 +21,7 @@
     <div id="wrapper">
         
         <div id="puyo-board">
-            </div>
+        </div>
 
         <div id="info-panel">
             
@@ -31,8 +30,10 @@
                 <div id="play-next-info" class="info-box info-group-a">
                     <h2>NEXT</h2>
                     <div class="next-puyo-row">
-                        <div id="next-puyo-1" class="next-puyo-slot"></div>
-                        <div id="next-puyo-2" class="next-puyo-slot"></div>
+                        <div id="next-puyo-1" class="next-puyo-slot">
+                            </div>
+                        <div id="next-puyo-2" class="next-puyo-slot">
+                            </div>
                     </div>
                 </div>
 
@@ -50,6 +51,8 @@
                 <div id="play-controls" class="common-control">
                     <button id="auto-drop-toggle-button" onclick="toggleAutoDrop()">自動落下: ON</button>
                     <button id="reset-button-play" onclick="resetGame()">盤面リセット</button>
+                    
+                    <button class="mode-toggle-btn" onclick="toggleMode()">edit</button>
                 </div>
 
             </div>
@@ -70,23 +73,29 @@
                     </div>
                 </div>
 
-                <div id="edit-next-info" class="info-box edit-group-b">
-                    <h2>ネクスト設定 (クリックで色変更)</h2>
+                <div id="edit-next-info" class="info-box"> 
+                    <h2>ネクスト設定 (50手先まで)</h2>
+                    
                     <div class="next-puyo-row">
-                        <div id="edit-next-1" class="next-puyo-slot"></div>
-                        <div id="edit-next-2" class="next-puyo-slot"></div>
+                        <div class="next-puyo-slot" id="edit-next-1"></div>
+                        <div class="next-puyo-slot" id="edit-next-2"></div>
                     </div>
-                    <button onclick="applyNextPuyos()">ネクスト設定を保存</button>
+                    
+                    <div id="edit-next-list-container">
+                        </div>
+
+                    <button id="apply-next-button" onclick="applyNextPuyos()" style="margin-top:10px; width:100%; padding:8px; background-color: #457b9d; color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer;">ネクスト設定を適用</button>
+                    <button onclick="clearEditNext()" style="margin-top:10px; width:100%; padding:5px; background-color: #e63946; color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer;">ネクストをランダムで再生成</button>
                 </div>
                 
-                <div id="edit-controls" class="common-control">
-                    <button id="reset-button-edit" onclick="resetGame()">盤面リセット</button>
+                <div id="edit-action-buttons" class="common-control">
+                    <div id="mode-toggle-container">
+                        <button class="mode-toggle-btn" onclick="toggleMode()">play</button>
+                    </div>
+                    <div id="reset-button-container">
+                        <button id="reset-button-edit" onclick="resetGame()">盤面リセット</button>
+                    </div>
                 </div>
-
-            </div>
-            
-            <div id="mode-toggle-container" class="common-control">
-                <button id="mode-toggle-button" onclick="toggleMode()">edit</button>
             </div>
             
         </div>
