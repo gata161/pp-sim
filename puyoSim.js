@@ -40,7 +40,7 @@ let gameState = 'playing'; // 'playing', 'chaining', 'gameover', 'editing'
 let currentEditColor = COLORS.EMPTY; // エディットモードで選択中の色 (デフォルトは消しゴム: 0)
 let editingNextPuyos = []; // エディットモードで使用するNEXT 50組
 
-// ★追加: 履歴管理用スタック
+// ★履歴管理用スタック
 let historyStack = []; // 過去の状態を保存 (Undo用)
 let redoStack = [];    // 戻した状態を保存 (Redo用)
 
@@ -255,10 +255,6 @@ window.toggleMode = function() {
 
 /**
  * 現在の盤面とネクストリストをコード化してBase64文字列として返す。
- * * 盤面: 6列 * 14行 = 84個のぷよ (0~5 = 3ビットで表現)
- * ネクスト: 50組 * 2色 = 100個のぷよ (0~5 = 3ビットで表現)
- * 合計: 84 + 100 = 184個のぷよデータ。 184 * 3ビット = 552ビット。
- * 552 / 8 = 69バイト。 Base64で約92文字。
  */
 window.copyStageCode = function() {
     if (gameState !== 'editing') {
@@ -667,7 +663,11 @@ function generateNewPuyo() {
     
     // 初期配置で衝突チェック（ゲームオーバー判定）
     const startingCoords = getCoordsFromState(currentPuyo);
-    if (checkCollision(startingCoords)) {
+    
+    // 3列目 (X=2) の 13段目 (Y=12) に、メインまたはサブのどちらかが配置されているかチェック
+    const isOverlappingTarget = startingCoords.some(p => p.x === 2 && p.y === 12 && board[p.y][p.x] !== COLORS.EMPTY);
+
+    if (checkCollision(startingCoords) || isOverlappingTarget) {
         gameState = 'gameover';
         alert('ゲームオーバーです！');
         clearInterval(dropTimer); 
@@ -861,10 +861,12 @@ function lockPuyo() {
 
     // 1. 盤面にぷよを固定
     for (const puyo of coords) {
-        // 14列目 (Y=13, HEIGHT-1) に固定されたらゲームオーバー
-        if (puyo.y >= HEIGHT - 1) { 
-            isGameOver = true;
-        }
+        
+        // ゲームオーバー判定 (X=2, Y=12 のみ)
+        if (puyo.y === HEIGHT - 2 && puyo.x === 2) { // Y=12 かつ X=2
+             isGameOver = true;
+        } 
+        
         if (puyo.y >= 0) {
             board[puyo.y][puyo.x] = puyo.color;
         }
@@ -879,24 +881,39 @@ function lockPuyo() {
         return;
     }
     
-    // 2. ぷよ固定完了
+    // 2. 14段目 (Y=13, HEIGHT-1) のぷよを即座に削除
+    for (let x = 0; x < WIDTH; x++) {
+        if (board[HEIGHT - 1][x] !== COLORS.EMPTY) {
+            board[HEIGHT - 1][x] = COLORS.EMPTY;
+        }
+    }
+
+    // 3. ぷよ固定完了
     currentPuyo = null;
     
-    // 3. 履歴の保存（新しい手としてRedoスタックをクリア）
+    // 4. 履歴の保存（新しい手としてRedoスタックをクリア）
     saveState(true); 
     
-    // 4. 連鎖開始
+    // 5. 連鎖開始
     gameState = 'chaining';
     chainCount = 0;
     
     runChain();
 }
 
+/**
+ * 盤面から連結したぷよのグループを見つける
+ * 修正済み: Y=12 (13段目) は連鎖判定の探索対象外とする
+ */
 function findConnectedPuyos() {
     let disappearingGroups = [];
+    // HEIGHT-2 (Y=12) まで探索対象に含めるため、HEIGHT (14) 行で初期化
     let visited = Array(HEIGHT).fill(0).map(() => Array(WIDTH).fill(false));
 
-    for (let y = 0; y < HEIGHT; y++) {
+    // 探索範囲を Y=0 から Y=11 (12段目) までに制限する
+    const MAX_SEARCH_Y = HEIGHT - 2; // = 12 (13段目) 
+
+    for (let y = 0; y < MAX_SEARCH_Y; y++) {
         for (let x = 0; x < WIDTH; x++) {
             const color = board[y][x];
             
@@ -915,10 +932,12 @@ function findConnectedPuyos() {
                 [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
                     const nx = current.x + dx;
                     const ny = current.y + dy;
-
+                    
+                    // 連結チェックの条件: ny < MAX_SEARCH_Y (Y=12 未満) を追加
                     if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT &&
-                        !visited[ny][nx] && board[ny][nx] === color) {
-                        
+                        !visited[ny][nx] && board[ny][nx] === color && 
+                        ny < MAX_SEARCH_Y) 
+                    {
                         visited[ny][nx] = true;
                         stack.push({ x: nx, y: ny });
                     }
@@ -1073,7 +1092,6 @@ function gravity() {
 function renderBoard() {
     const isPlaying = gameState === 'playing';
     const currentPuyoCoords = isPlaying ? getPuyoCoords() : [];
-    // 操作中のぷよがない場合、ゴーストぷよは計算しない
     const ghostPuyoCoords = isPlaying && currentPuyo ? getGhostFinalPositions() : []; 
 
     for (let y = HEIGHT - 1; y >= 0; y--) { 
@@ -1092,7 +1110,7 @@ function renderBoard() {
                 cellColor = puyoInFlight.color; 
                 puyoClasses = `puyo puyo-${cellColor}`; 
             } 
-            // 2. ゴーストぷよ (操作中ぷよがなければ)
+            // 2. ゴーストぷよ
             else {
                 const puyoGhost = ghostPuyoCoords.find(p => p.x === x && p.y === y);
                 if (puyoGhost) {
