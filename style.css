@@ -59,9 +59,8 @@ body {
     position: relative; 
 }
 
-/* --- 隠し領域の視覚化 (13列目と14列目) --- */
-#puyo-board > div:nth-child(-n+6), 
-#puyo-board > div:nth-child(n+7):nth-child(-n+12) 
+/* --- 隠し領域の視覚化 (13段目と 14段目のみ) --- */
+#puyo-board > div:nth-child(-n+12)
 {
     opacity: 0.5;
     background-color: rgba(50, 50, 50, 0.5); 
@@ -301,7 +300,6 @@ body {
 #color-palette .puyo {
     cursor: pointer;
     box-shadow: 0 0 5px rgba(0,0,0,0.5);
-    /* グリッドセル内で正方形を維持 */
     width: 90%; 
     aspect-ratio: 1 / 1; 
 }
@@ -323,40 +321,21 @@ body {
     border: 2px dashed #666; 
 }
 
-/* ------------------------------------- */
-/* ★ ゴーストぷよの修正: RGBaによる色付き半透明表現 ★ */
-/* ------------------------------------- */
-
+/* --- ゴーストぷよ --- */
 .puyo-ghost {
     box-shadow: none !important; 
     border: 2px dashed #fff; 
     opacity: 1; 
 }
 
-.puyo-1.puyo-ghost { 
-    background-color: rgba(230, 57, 70, 0.4); 
-    border-color: #e63946; 
-} 
-.puyo-2.puyo-ghost { 
-    background-color: rgba(69, 123, 157, 0.4); 
-    border-color: #457b9d;
-} 
-.puyo-3.puyo-ghost { 
-    background-color: rgba(138, 201, 38, 0.4); 
-    border-color: #8ac926;
-} 
-.puyo-4.puyo-ghost { 
-    background-color: rgba(252, 163, 17, 0.4); 
-    border-color: #fca311;
-} 
-.puyo-5.puyo-ghost { 
-    background-color: rgba(204, 204, 204, 0.4); 
-    border-color: #ccc;
-} 
+.puyo-1.puyo-ghost { background-color: rgba(230, 57, 70, 0.4); border-color: #e63946; } 
+.puyo-2.puyo-ghost { background-color: rgba(69, 123, 157, 0.4); border-color: #457b9d; } 
+.puyo-3.puyo-ghost { background-color: rgba(138, 201, 38, 0.4); border-color: #8ac926; } 
+.puyo-4.puyo-ghost { background-color: rgba(252, 163, 17, 0.4); border-color: #fca311; } 
+.puyo-5.puyo-ghost { background-color: rgba(204, 204, 204, 0.4); border-color: #ccc; } 
 
 
 /* --- ★ 50手先ネクスト設定リストのスタイル ★ --- */
-
 #edit-next-list-container {
     max-height: 250px; 
     overflow-y: auto;
@@ -375,10 +354,6 @@ body {
     border-bottom: 1px dashed #444;
 }
 
-.next-puyo-slot-pair:last-child {
-    border-bottom: none;
-}
-
 .next-puyo-slot-pair span {
     font-size: 0.8em;
     width: 35px;
@@ -394,48 +369,70 @@ body {
     justify-content: flex-start; 
     flex-grow: 1;
     padding-left: 10px;
-    
     display: flex;
     flex-direction: row; 
     align-items: center;
 }
-#edit-next-list-container .puyo {
-    cursor: pointer;
-}
 
-/* --- ★ モバイル操作ボタン ★ --- */
+
+/* --- ★ モバイル操作ボタン (2段スタック版) ★ --- */
 #mobile-controls {
     display: none; 
-    margin-top: 10px;
+    margin-top: 15px;
     width: 100%;
-    max-width: 400px; 
+    max-width: 500px; 
     flex-direction: row; 
-    justify-content: space-between; 
-    gap: 10px; 
+    justify-content: center; 
+    gap: 6px; 
+    padding: 0 5px;
+    box-sizing: border-box;
+    align-items: stretch; /* 1段ボタンと2段グループの高さを揃える */
 }
+
 #mobile-controls.visible {
     display: flex;
 }
 
+/* 縦並びにするためのコンテナ */
+.btn-stack {
+    display: flex;
+    flex-direction: column;
+    /* flex: 1; から数値を増やす (例: 1.5倍にする) */
+    flex: 1.5; 
+    gap: 4px;
+    min-width: 0; /* 縮小を許可してレイアウト崩れを防ぐ */
+}
+
 .mobile-btn {
-    width: 70px; 
-    height: 70px; 
-    padding: 0;
-    font-size: 1.6em; 
+    flex: 1; 
+    min-width: 0;
+    height: 70px; /* 全体の高さ */
+    font-size: 1.3em; 
     font-weight: bold;
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    background-color: #457b9d; 
-    transition: background-color 0.1s;
+    background-color: #5e81ac; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
     touch-action: manipulation;
-    flex-shrink: 0; 
-    flex-grow: 1; 
-    line-height: 70px;
-    text-align: center;
+    transition: background-color 0.1s, transform 0.05s;
 }
 
-#btn-rotate-cw, #btn-rotate-ccw {
-    background-color: #6a0dad; 
+.small-btn {
+    flex: none;
+    height: calc(50% - 2px);
+    font-size: 1.0em; /* 0.85emから少し大きくする */
+    white-space: nowrap; /* 改行を防ぐ */
+}
+
+#btn-soft-drop { background-color: #5e81ac; } /* 1↓ */
+#btn-hard-drop { background-color: #5e81ac; } /* M↓ */
+#btn-rotate-cw, #btn-rotate-ccw { background-color: #6a0dad; } /* B, Aボタン */
+
+.mobile-btn:active {
+    filter: brightness(1.2);
+    transform: scale(0.95);
 }
