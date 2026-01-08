@@ -136,19 +136,18 @@ function initializeGame() {
     if (!document.initializedKeyHandler) {
         document.addEventListener('keydown', handleInput);
         
-        // PC用ショートカットキーの変更
         document.addEventListener('keydown', (event) => {
             const key = event.key.toLowerCase();
-            if (key === 'u') { // Undo (一手戻す)
+            if (key === 'u') { 
                 event.preventDefault();
                 undoMove();
-            } else if (key === 'y') { // Redo (やり直し)
+            } else if (key === 'y') { 
                 event.preventDefault();
                 redoMove();
-            } else if (key === 'r') { // Reset (リセット)
+            } else if (key === 'r') { 
                 event.preventDefault();
                 resetGame();
-            } else if (key === 'e') { // Edit (エディット切り替え)
+            } else if (key === 'e') { 
                 event.preventDefault();
                 toggleMode();
             }
@@ -156,21 +155,19 @@ function initializeGame() {
 
         const btnLeft = document.getElementById('btn-left');
         const btnRight = document.getElementById('btn-right');
-        const btnRotateCW = document.getElementById('btn-rotate-cw'); // Bボタン
-        const btnRotateCCW = document.getElementById('btn-rotate-ccw'); // Aボタン
+        const btnRotateCW = document.getElementById('btn-rotate-cw'); 
+        const btnRotateCCW = document.getElementById('btn-rotate-ccw'); 
         const btnHardDrop = document.getElementById('btn-hard-drop');
         const btnSoftDrop = document.getElementById('btn-soft-drop');
 
         if (btnLeft) btnLeft.addEventListener('click', () => movePuyo(-1, 0));
         if (btnRight) btnRight.addEventListener('click', () => movePuyo(1, 0));
         
-        // Bボタンで右回転(CW)、Aボタンで左回転(CCW)
         if (btnRotateCW) btnRotateCW.addEventListener('click', window.rotatePuyoCW); 
         if (btnRotateCCW) btnRotateCCW.addEventListener('click', window.rotatePuyoCCW); 
         
         if (btnHardDrop) btnHardDrop.addEventListener('click', hardDrop);
         
-        // スマホ用ソフトドロップ（1↓）
         if (btnSoftDrop) btnSoftDrop.addEventListener('click', () => {
             if (gameState === 'playing') {
                 clearInterval(dropTimer);
@@ -567,8 +564,8 @@ function generateNewPuyo() {
     const [c1, c2] = nextPuyoColors.shift();
 
     currentPuyo = {
-        mainColor: c1,
-        subColor: c2,
+        mainColor: c2,
+        subColor: c1,
         mainX: 2, 
         mainY: HEIGHT - 2, 
         rotation: 0 
@@ -674,8 +671,8 @@ function getGhostFinalPositions() {
 function checkCollision(coords) {
     for (const puyo of coords) {
         if (puyo.x < 0 || puyo.x >= WIDTH || puyo.y < 0) return true;
-
-        if (puyo.y < HEIGHT && puyo.y >= 0 && board[puyo.y][puyo.x] !== COLORS.EMPTY) {
+        // 14列目(Y=13)は衝突判定から除外する（設置を許可するため）
+        if (puyo.y < HEIGHT - 1 && board[puyo.y][puyo.x] !== COLORS.EMPTY) {
             return true;
         }
     }
@@ -709,7 +706,6 @@ function movePuyo(dx, dy, newRotation, shouldRender = true) {
     return false;
 }
 
-// 回転補正ロジック
 window.rotatePuyoCW = function() {
     if (gameState !== 'playing' || !currentPuyo) return false;
     
@@ -723,21 +719,18 @@ window.rotatePuyoCW = function() {
     
     let rotationSuccess = false;
 
-    // 1. まずはその場での回転を試行
     rotationSuccess = movePuyo(0, 0, newRotation);
 
     if (!rotationSuccess) {
-        // 2-A. 縦（0, 2）から横へ回転する場合
         if (oldRotation === 0 || oldRotation === 2) {
-            if (newRotation === 1) { // 左にサブ
-                rotationSuccess = movePuyo(1, 0, newRotation); // 右スライド
-                if (!rotationSuccess) rotationSuccess = movePuyo(0, 1, newRotation); // 上に逃げる
-            } else if (newRotation === 3) { // 右にサブ
-                rotationSuccess = movePuyo(-1, 0, newRotation); // 左スライド
-                if (!rotationSuccess) rotationSuccess = movePuyo(0, 1, newRotation); // 上に逃げる
+            if (newRotation === 1) { 
+                rotationSuccess = movePuyo(1, 0, newRotation); 
+                if (!rotationSuccess) rotationSuccess = movePuyo(0, 1, newRotation); 
+            } else if (newRotation === 3) { 
+                rotationSuccess = movePuyo(-1, 0, newRotation); 
+                if (!rotationSuccess) rotationSuccess = movePuyo(0, 1, newRotation); 
             }
         } 
-        // 2-B. 横（1, 3）から縦へ回転する場合
         else {
             rotationSuccess = movePuyo(0, 1, newRotation);
         }
@@ -748,7 +741,6 @@ window.rotatePuyoCW = function() {
         return true;
     }
 
-    // 3. 失敗時のクイックターン判定
     const now = Date.now();
     if (lastFailedRotation.type === 'CW' && (now - lastFailedRotation.timestamp) < QUICK_TURN_WINDOW) {
         [currentPuyo.mainColor, currentPuyo.subColor] = [currentPuyo.subColor, currentPuyo.mainColor];
@@ -775,11 +767,9 @@ window.rotatePuyoCCW = function() {
 
     let rotationSuccess = false;
 
-    // 1. その場での回転を試行
     rotationSuccess = movePuyo(0, 0, newRotation);
 
     if (!rotationSuccess) {
-        // 2-A. 縦（0, 2）から横へ
         if (oldRotation === 0 || oldRotation === 2) {
             if (newRotation === 1) {
                 rotationSuccess = movePuyo(1, 0, newRotation);
@@ -789,7 +779,6 @@ window.rotatePuyoCCW = function() {
                 if (!rotationSuccess) rotationSuccess = movePuyo(0, 1, newRotation);
             }
         } 
-        // 2-B. 横（1, 3）から縦へ
         else {
             rotationSuccess = movePuyo(0, 1, newRotation);
         }
@@ -800,7 +789,6 @@ window.rotatePuyoCCW = function() {
         return true;
     }
 
-    // 3. 失敗時のクイックターン判定
     const now = Date.now();
     if (lastFailedRotation.type === 'CCW' && (now - lastFailedRotation.timestamp) < QUICK_TURN_WINDOW) {
         [currentPuyo.mainColor, currentPuyo.subColor] = [currentPuyo.subColor, currentPuyo.mainColor];
@@ -827,26 +815,35 @@ function lockPuyo() {
     if (gameState !== 'playing' || !currentPuyo) return;
 
     const coords = getPuyoCoords();
-
-    for (const puyo of coords) {
-        if (puyo.y >= 0) {
-            board[puyo.y][puyo.x] = puyo.color;
+    
+    // 1. 設置（14列目も含めて一旦盤面に書き込む）
+    coords.forEach(p => {
+        if (p.y >= 0 && p.y < HEIGHT && p.x >= 0 && p.x < WIDTH) {
+            board[p.y][p.x] = p.color;
         }
-    }
-
-    for (let x = 0; x < WIDTH; x++) {
-        if (board[HEIGHT - 1][x] !== COLORS.EMPTY) {
-            board[HEIGHT - 1][x] = COLORS.EMPTY;
-        }
-    }
+    });
 
     currentPuyo = null;
+    
+    // 2. 自由落下を実行（これにより、14列目から13列目以下へ移動する）
+    gravity();
+
+    // 3. 14列目（Y=13）をクリア
+    for (let x = 0; x < WIDTH; x++) {
+        board[13][x] = COLORS.EMPTY;
+    }
+
+    // 4. 描画を更新
+    renderBoard();
+    updateUI();
     saveState(true); 
     
+    // 5. 連鎖判定
     gameState = 'chaining';
     chainCount = 0;
-    
     runChain();
+    
+    if (window.clearAIHint) window.clearAIHint();
 }
 
 function findConnectedPuyos() {
@@ -931,8 +928,8 @@ async function runChain() {
             updateUI(); 
         }
         
-        const gameOverLineY = HEIGHT - 3; // Y=11
-        const checkX = 2; // X=2 (3列目)
+        const gameOverLineY = HEIGHT - 3; 
+        const checkX = 2; 
         
         const isGameOver = board[gameOverLineY][checkX] !== COLORS.EMPTY;
         
@@ -1042,31 +1039,84 @@ function checkBoardEmpty() {
 
 // --- 描画とUI更新 ---
 
+
 function renderBoard() {
-    const isPlaying = gameState === 'playing';
-    const currentPuyoCoords = isPlaying ? getPuyoCoords() : [];
-    const ghostPuyoCoords = isPlaying && currentPuyo ? getGhostFinalPositions() : []; 
-
-    for (let y = HEIGHT - 1; y >= 0; y--) { 
+    const boardElement = document.getElementById('puyo-board');
+    if (!boardElement) return;
+    
+    boardElement.innerHTML = '';
+    
+    // セルの再作成
+    for (let y = HEIGHT - 1; y >= 0; y--) {
         for (let x = 0; x < WIDTH; x++) {
-            const cellElement = document.getElementById(`cell-${x}-${y}`);
+            const cell = document.createElement('div');
+            cell.id = 'cell-' + x + '-' + y;
+            
+            const puyo = document.createElement('div');
+            puyo.className = 'puyo puyo-0';
+            puyo.setAttribute('data-color', 0);
+            
+            cell.appendChild(puyo);
+            boardElement.appendChild(cell);
+        }
+    }
+    
+    // 盤面のぷよを描画
+    for (let y = 0; y < HEIGHT; y++) {
+        for (let x = 0; x < WIDTH; x++) {
+            const cellElement = document.getElementById('cell-' + x + '-' + y);
             if (!cellElement) continue;
+            
+            const puyoElement = cellElement.firstChild;
+            if (!puyoElement) continue;
+            
+            const color = board[y][x];
+            puyoElement.className = 'puyo puyo-' + color;
+            puyoElement.setAttribute('data-color', color);
+        }
+    }
+    
+    // 操作中のぷよとゴーストぷよを描画
+    if (currentPuyo && gameState === 'playing') {
+        renderCurrentPuyo();
+    }
+    
+    // NEXT表示を更新
+    if (gameState === 'playing') {
+        renderPlayNextPuyo();
+    } else if (gameState === 'editing') {
+        renderEditNextPuyos();
+    }
+}
 
-            const puyoElement = cellElement.firstChild; 
+function renderCurrentPuyo() {
+    if (!currentPuyo) return;
+    
+    const currentPuyoCoords = getPuyoCoords();
+    const ghostPuyoCoords = getGhostFinalPositions();
+    
+    for (let y = 0; y < HEIGHT; y++) {
+        for (let x = 0; x < WIDTH; x++) {
+            const cellElement = document.getElementById('cell-' + x + '-' + y);
+            if (!cellElement) continue;
             
-            let cellColor = board[y][x]; 
-            let puyoClasses = `puyo puyo-${cellColor}`;
+            const puyoElement = cellElement.firstChild;
+            if (!puyoElement) continue;
             
+            let cellColor = board[y][x];
+            let puyoClasses = 'puyo puyo-' + cellColor;
+            
+            // 操作中のぷよをチェック
             const puyoInFlight = currentPuyoCoords.find(p => p.x === x && p.y === y);
             if (puyoInFlight) {
-                cellColor = puyoInFlight.color; 
-                puyoClasses = `puyo puyo-${cellColor}`; 
-            } 
-            else {
+                cellColor = puyoInFlight.color;
+                puyoClasses = 'puyo puyo-' + cellColor;
+            } else {
+                // ゴーストぷよをチェック
                 const puyoGhost = ghostPuyoCoords.find(p => p.x === x && p.y === y);
                 if (puyoGhost) {
-                    cellColor = puyoGhost.color; 
-                    puyoClasses = `puyo puyo-${cellColor} puyo-ghost`;
+                    cellColor = puyoGhost.color;
+                    puyoClasses = 'puyo puyo-' + cellColor + ' puyo-ghost';
                 }
             }
             
@@ -1074,14 +1124,43 @@ function renderBoard() {
             puyoElement.setAttribute('data-color', cellColor);
         }
     }
-
-    if (gameState === 'playing') {
-        renderPlayNextPuyo();
-    } else if (gameState === 'editing') {
-        renderEditNextPuyos(); 
-    }
 }
 
+function renderPlayNextPuyo() {
+    const next1Element = document.getElementById('next-puyo-1');
+    const next2Element = document.getElementById('next-puyo-2');
+    
+    if (!next1Element || !next2Element) return;
+
+    const slots = [next1Element, next2Element];
+
+    const createPuyo = (color) => {
+        let puyo = document.createElement('div');
+        puyo.className = 'puyo puyo-' + color;
+        return puyo;
+    };
+    
+    slots.forEach((slot, index) => {
+        slot.innerHTML = '';
+        if (nextPuyoColors.length > index) {
+            const [c_main, c_sub] = nextPuyoColors[index];
+            slot.appendChild(createPuyo(c_sub));
+            slot.appendChild(createPuyo(c_main));
+        }
+    });
+}
+
+
+
+function updateUI() {
+    const scoreElement = document.getElementById('score');
+    const chainElement = document.getElementById('chain-count');
+    
+    if (scoreElement) scoreElement.textContent = score;
+    if (chainElement) chainElement.textContent = chainCount;
+    
+    renderBoard();
+}
 function renderPlayNextPuyo() {
     const next1Element = document.getElementById('next-puyo-1');
     const next2Element = document.getElementById('next-puyo-2');
@@ -1100,13 +1179,13 @@ function renderPlayNextPuyo() {
         slot.innerHTML = '';
         if (nextPuyoColors.length > index) {
             const [c_main, c_sub] = nextPuyoColors[index]; 
-            
             slot.appendChild(createPuyo(c_sub)); 
             slot.appendChild(createPuyo(c_main)); 
         }
     });
 }
 
+// --- 【修正済み】エディットモードのネクスト表示 ---
 function renderEditNextPuyos() {
     const listContainer = document.getElementById('edit-next-list-container');
     const visibleSlots = [
@@ -1119,33 +1198,40 @@ function renderEditNextPuyos() {
     const createEditablePuyo = (color, listIndex, puyoIndex) => {
         let puyo = document.createElement('div');
         puyo.className = `puyo puyo-${color}`;
+        puyo.style.cursor = 'pointer';
         
         puyo.onclick = (event) => {
-            event.stopPropagation(); 
-            if (gameState !== 'editing') return;
+            event.stopPropagation();
+            console.log('Clicked puyo at [' + listIndex + '][' + puyoIndex + '], currentEditColor=' + currentEditColor + ', gameState=' + gameState);
+            if (gameState !== 'editing') {
+                console.log('Not in editing mode');
+                return;
+            }
             
             if (editingNextPuyos.length > listIndex) {
-                editingNextPuyos[listIndex][puyoIndex] = currentEditColor; 
-                renderEditNextPuyos(); 
+                console.log('Before: editingNextPuyos[' + listIndex + '] = [' + editingNextPuyos[listIndex][0] + ', ' + editingNextPuyos[listIndex][1] + ']');
+                editingNextPuyos[listIndex][puyoIndex] = currentEditColor;
+                console.log('After: editingNextPuyos[' + listIndex + '] = [' + editingNextPuyos[listIndex][0] + ', ' + editingNextPuyos[listIndex][1] + ']');
+                renderEditNextPuyos();
+            } else {
+                console.log('editingNextPuyos.length (' + editingNextPuyos.length + ') <= listIndex (' + listIndex + ')');
             }
         };
-        
         return puyo;
     };
 
-
     visibleSlots.forEach((slot, index) => {
         slot.innerHTML = '';
+        // slotにCSSクラスを強制適用（バックアップCSSにサイズがない場合でも見えるようにするため）
+        slot.className = 'next-puyo-slot'; 
         if (editingNextPuyos.length > index) {
             const [c_main, c_sub] = editingNextPuyos[index];
-            
             slot.appendChild(createEditablePuyo(c_sub, index, 1)); 
             slot.appendChild(createEditablePuyo(c_main, index, 0)); 
         }
     });
 
     listContainer.innerHTML = '';
-    
     for (let i = NUM_VISIBLE_NEXT_PUYOS; i < MAX_NEXT_PUYOS; i++) {
         if (editingNextPuyos.length <= i) break;
 
@@ -1156,15 +1242,14 @@ function renderEditNextPuyos() {
         countSpan.textContent = `N${i + 1}`;
         pairContainer.appendChild(countSpan);
         
-        const puyoRow = document.createElement('div');
-        puyoRow.className = 'next-puyo-row';
+        const miniSlot = document.createElement('div');
+        miniSlot.className = 'next-puyo-slot';
         
         const [c_main, c_sub] = editingNextPuyos[i];
-        
-        puyoRow.appendChild(createEditablePuyo(c_sub, i, 1)); 
-        puyoRow.appendChild(createEditablePuyo(c_main, i, 0)); 
+        miniSlot.appendChild(createEditablePuyo(c_sub, i, 1)); 
+        miniSlot.appendChild(createEditablePuyo(c_main, i, 0)); 
 
-        pairContainer.appendChild(puyoRow);
+        pairContainer.appendChild(miniSlot);
         listContainer.appendChild(pairContainer);
     }
 }
@@ -1215,3 +1300,267 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeGame();
     window.addEventListener('resize', checkMobileControlsVisibility);
 });
+
+/**
+ * puyoSim.js の末尾に追加してください。
+ * 2手先読みAI(v2)に対応した統合コードです。
+ */
+
+(function() {
+    let aiHint = null;
+
+    const PUYO_COLORS = {
+        1: '#e63946', // 赤
+        2: '#457b9d', // 青
+        3: '#8ac926', // 緑
+        4: '#fca311', // 黄
+        5: '#ccc',    // おじゃま
+        0: 'transparent'
+    };
+
+    const aiButton = document.getElementById('ai-button');
+    if (aiButton) {
+        aiButton.style.width = '100%';
+        aiButton.style.marginTop = '10px';
+        aiButton.style.padding = '10px';
+        aiButton.style.boxSizing = 'border-box';
+
+        aiButton.addEventListener('click', () => {
+            if (gameState !== 'playing' || !currentPuyo) {
+                alert("プレイ中のみAIヒントを表示できます。");
+                return;
+            }
+
+            // ネクストぷよの情報を取得
+            // nextPuyoColors は [[c1, c2], [c3, c4], ...] の形式
+            const nextPair = nextPuyoColors[0] || [0, 0];
+
+            // AIに最適な場所を計算させる (2手先読み)
+            aiHint = PuyoAI.getBestMove(
+                board, 
+                currentPuyo.mainColor, 
+                currentPuyo.subColor,
+                nextPair[0],
+                nextPair[1]
+            );
+
+            console.log("AI(v2)推奨位置:", aiHint);
+            showAIHintOnBoard();
+        });
+    }
+
+    function showAIHintOnBoard() {
+        if (!aiHint || !currentPuyo) return;
+        document.querySelectorAll('.ai-hint-dot').forEach(el => el.remove());
+
+        const axisX = aiHint.x;
+        let axisY = getDropY(axisX);
+        let childX = axisX;
+        let childY = axisY;
+        const r = aiHint.rotation;
+        
+        if (r === 0) childY = getDropY(axisX, axisY + 1); 
+        else if (r === 1) {
+            childX = axisX + 1;
+            childY = getDropY(childX);
+        } else if (r === 2) {
+            childY = axisY;
+            axisY = getDropY(axisX, childY + 1);
+        } else if (r === 3) {
+            childX = axisX - 1;
+            childY = getDropY(childX);
+        }
+
+        const axisColorCode = PUYO_COLORS[currentPuyo.mainColor] || '#fff';
+        const childColorCode = PUYO_COLORS[currentPuyo.subColor] || '#fff';
+
+        createDot(axisX, axisY, axisColorCode, '軸ぷよ');
+        createDot(childX, childY, childColorCode, '子ぷよ');
+    }
+
+    function getDropY(x, startY = 0) {
+        if (x < 0 || x >= WIDTH) return -1;
+        let y = Math.max(0, startY);
+        while (y < HEIGHT && board[y][x] !== COLORS.EMPTY) {
+            y++;
+        }
+        return y < HEIGHT ? y : HEIGHT - 1;
+    }
+
+    function createDot(x, y, color, label) {
+        if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) return;
+        const cell = document.getElementById(`cell-${x}-${y}`);
+        if (cell) {
+            const dot = document.createElement('div');
+            dot.className = 'ai-hint-dot';
+            dot.style.position = 'absolute';
+            dot.style.width = '18px';
+            dot.style.height = '18px';
+            dot.style.backgroundColor = color;
+            dot.style.borderRadius = '50%';
+            dot.style.top = '50%';
+            dot.style.left = '50%';
+            dot.style.transform = 'translate(-50%, -50%)';
+            dot.style.zIndex = '100';
+            dot.style.border = '3px solid #fff';
+            dot.style.boxShadow = '0 0 8px rgba(0,0,0,0.9)';
+            cell.style.position = 'relative';
+            cell.appendChild(dot);
+        }
+    }
+
+    window.clearAIHint = function() {
+        aiHint = null;
+        document.querySelectorAll('.ai-hint-dot').forEach(el => el.remove());
+    };
+})();
+
+
+// --- AI連携コード (Manus AI) ---
+(function() {
+    let aiHint = null;
+    const PUYO_COLORS = { 1: '#e63946', 2: '#457b9d', 3: '#8ac926', 4: '#fca311', 5: '#ccc', 0: 'transparent' };
+
+    window.addEventListener('load', function() {
+        const aiButton = document.getElementById('ai-button');
+        if (aiButton) {
+            aiButton.addEventListener('click', () => {
+                if (gameState !== 'playing' || !currentPuyo) {
+                    alert('プレイ中のみAIヒントを表示できます。');
+                    return;
+                }
+                const nextPair = nextPuyoColors[0] || [0, 0];
+                if (typeof PuyoAI !== 'undefined' && PuyoAI.getBestMove) {
+                    aiHint = PuyoAI.getBestMove(board, currentPuyo.mainColor, currentPuyo.subColor, nextPair[0], nextPair[1]);
+                    showAIHintOnBoard();
+                }
+            });
+        }
+    });
+
+    function showAIHintOnBoard() {
+        if (!aiHint || !currentPuyo) return;
+        document.querySelectorAll('.ai-hint-dot').forEach(el => el.remove());
+        const axisX = aiHint.x;
+        let axisY = getDropY(axisX);
+        let childX = axisX;
+        let childY = axisY;
+        const r = aiHint.rotation;
+        if (r === 0) childY = getDropY(axisX, axisY + 1);
+        else if (r === 1) { childX = axisX + 1; childY = getDropY(childX); }
+        else if (r === 2) { childY = axisY; axisY = getDropY(axisX, childY + 1); }
+        else if (r === 3) { childX = axisX - 1; childY = getDropY(childX); }
+        if (axisY < 13) createDot(axisX, axisY, PUYO_COLORS[currentPuyo.mainColor]);
+        if (childY < 13) createDot(childX, childY, PUYO_COLORS[currentPuyo.subColor]);
+    }
+
+    function getDropY(x, startY = 0) {
+        if (x < 0 || x >= WIDTH) return -1;
+        let y = Math.max(0, startY);
+        while (y < HEIGHT && board[y][x] !== COLORS.EMPTY) y++;
+        return y;
+    }
+
+    function createDot(x, y, color) {
+        const cell = document.getElementById('cell-' + x + '-' + y);
+        if (cell) {
+            const dot = document.createElement('div');
+            dot.className = 'ai-hint-dot';
+            dot.style.position = 'absolute';
+            dot.style.width = '18px';
+            dot.style.height = '18px';
+            dot.style.backgroundColor = color;
+            dot.style.borderRadius = '50%';
+            dot.style.top = '50%';
+            dot.style.left = '50%';
+            dot.style.transform = 'translate(-50%, -50%)';
+            dot.style.zIndex = '100';
+            dot.style.border = '3px solid #fff';
+            dot.style.boxShadow = '0 0 8px rgba(0,0,0,0.9)';
+            cell.style.position = 'relative';
+            cell.appendChild(dot);
+        }
+    }
+
+    window.clearAIHint = function() {
+        aiHint = null;
+        document.querySelectorAll('.ai-hint-dot').forEach(el => el.remove());
+    };
+})();
+
+// --- 最大連鎖数表示機能 (Manus AI) ---
+(function() {
+    let maxChainPuyo = null;
+
+    window.addEventListener('load', function() {
+        const maxChainButton = document.getElementById('max-chain-button');
+        if (maxChainButton) {
+            maxChainButton.addEventListener('click', () => {
+                if (gameState !== 'playing') {
+                    alert('プレイ中のみ最大連鎖数を表示できます。');
+                    return;
+                }
+                
+                const boardCopy = board.map(row => [...row]);
+                if (typeof PuyoAI !== 'undefined' && PuyoAI.findMaxChainPuyo) {
+                    maxChainPuyo = PuyoAI.findMaxChainPuyo(boardCopy);
+                    
+                    if (maxChainPuyo) {
+                        showMaxChainPuyoOnBoard();
+                    } else {
+                        alert('連鎖が発生するぷよが見つかりません。');
+                        clearMaxChainHint();
+                    }
+                }
+            });
+        }
+    });
+
+    function showMaxChainPuyoOnBoard() {
+        if (!maxChainPuyo) return;
+        document.querySelectorAll('.max-chain-hint-box').forEach(el => el.remove());
+        
+        const x = maxChainPuyo.x;
+        const y = maxChainPuyo.y;
+        const chainCount = maxChainPuyo.chain;
+        
+        drawRedBox(x, y);
+        updateMaxChainDisplay(chainCount);
+        console.log('最大連鎖: ' + chainCount + '鎖 at (' + x + ', ' + y + ')');
+    }
+    
+    function updateMaxChainDisplay(chainCount) {
+        const maxChainDisplay = document.getElementById('max-chain-display');
+        if (maxChainDisplay) {
+            maxChainDisplay.textContent = chainCount;
+        }
+    }
+
+    function drawRedBox(x, y) {
+        const cell = document.getElementById('cell-' + x + '-' + y);
+        if (cell) {
+            const box = document.createElement('div');
+            box.className = 'max-chain-hint-box';
+            box.style.position = 'absolute';
+            box.style.width = '100%';
+            box.style.height = '100%';
+            box.style.top = '0';
+            box.style.left = '0';
+            box.style.border = '3px solid #e74c3c';
+            box.style.boxSizing = 'border-box';
+            box.style.zIndex = '99';
+            box.style.borderRadius = '4px';
+            cell.style.position = 'relative';
+            cell.appendChild(box);
+        }
+    }
+
+    window.clearMaxChainHint = function() {
+        maxChainPuyo = null;
+        document.querySelectorAll('.max-chain-hint-box').forEach(el => el.remove());
+        const maxChainDisplay = document.getElementById('max-chain-display');
+        if (maxChainDisplay) {
+            maxChainDisplay.textContent = '-';
+        }
+    };
+})();
