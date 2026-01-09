@@ -1185,7 +1185,7 @@ function renderPlayNextPuyo() {
     });
 }
 
-// --- 【修正済み】エディットモードのネクスト表示 ---
+// --- 【修正済み】エディットモードのネクスト表示（GitHubバックアップ版を参考） ---
 function renderEditNextPuyos() {
     const listContainer = document.getElementById('edit-next-list-container');
     const visibleSlots = [
@@ -1195,61 +1195,64 @@ function renderEditNextPuyos() {
 
     if (!listContainer || !visibleSlots[0] || !visibleSlots[1]) return;
 
+    /**
+     * クリックで編集可能なぷよ要素を作成するヘルパー関数
+     * GitHubバックアップの動作ロジックを採用
+     */
     const createEditablePuyo = (color, listIndex, puyoIndex) => {
         let puyo = document.createElement('div');
         puyo.className = `puyo puyo-${color}`;
-        puyo.style.cursor = 'pointer';
         
-        puyo.onclick = (event) => {
+        puyo.addEventListener('click', (event) => {
             event.stopPropagation();
-            console.log('Clicked puyo at [' + listIndex + '][' + puyoIndex + '], currentEditColor=' + currentEditColor + ', gameState=' + gameState);
-            if (gameState !== 'editing') {
-                console.log('Not in editing mode');
-                return;
-            }
+            if (gameState !== 'editing') return;
             
             if (editingNextPuyos.length > listIndex) {
-                console.log('Before: editingNextPuyos[' + listIndex + '] = [' + editingNextPuyos[listIndex][0] + ', ' + editingNextPuyos[listIndex][1] + ']');
+                // puyoIndex: 0=メイン(下), 1=サブ(上)
                 editingNextPuyos[listIndex][puyoIndex] = currentEditColor;
-                console.log('After: editingNextPuyos[' + listIndex + '] = [' + editingNextPuyos[listIndex][0] + ', ' + editingNextPuyos[listIndex][1] + ']');
                 renderEditNextPuyos();
-            } else {
-                console.log('editingNextPuyos.length (' + editingNextPuyos.length + ') <= listIndex (' + listIndex + ')');
             }
-        };
+        });
+        
         return puyo;
     };
 
+    // --- 1. 現在のNEXT 1, NEXT 2 の描画 (リストの先頭 2つ) ---
     visibleSlots.forEach((slot, index) => {
         slot.innerHTML = '';
-        // slotにCSSクラスを強制適用（バックアップCSSにサイズがない場合でも見えるようにするため）
-        slot.className = 'next-puyo-slot'; 
         if (editingNextPuyos.length > index) {
             const [c_main, c_sub] = editingNextPuyos[index];
-            slot.appendChild(createEditablePuyo(c_sub, index, 1)); 
-            slot.appendChild(createEditablePuyo(c_main, index, 0)); 
+            
+            slot.appendChild(createEditablePuyo(c_sub, index, 1)); // 上のぷよ (サブ)
+            slot.appendChild(createEditablePuyo(c_main, index, 0)); // 下のぷよ (メイン)
         }
     });
 
+    // --- 2. 50手先までのリストの描画 ---
     listContainer.innerHTML = '';
+    
+    // NEXT 3 以降 (index 2 から MAX_NEXT_PUYOS - 1 まで)
     for (let i = NUM_VISIBLE_NEXT_PUYOS; i < MAX_NEXT_PUYOS; i++) {
         if (editingNextPuyos.length <= i) break;
-
+        
         const pairContainer = document.createElement('div');
         pairContainer.className = 'next-puyo-slot-pair';
-
+        
+        // 手数 (例: N3, N4...)
         const countSpan = document.createElement('span');
         countSpan.textContent = `N${i + 1}`;
         pairContainer.appendChild(countSpan);
         
-        const miniSlot = document.createElement('div');
-        miniSlot.className = 'next-puyo-slot';
+        // ぷよの行
+        const puyoRow = document.createElement('div');
+        puyoRow.className = 'next-puyo-row';
         
         const [c_main, c_sub] = editingNextPuyos[i];
-        miniSlot.appendChild(createEditablePuyo(c_sub, i, 1)); 
-        miniSlot.appendChild(createEditablePuyo(c_main, i, 0)); 
-
-        pairContainer.appendChild(miniSlot);
+        
+        puyoRow.appendChild(createEditablePuyo(c_sub, i, 1)); // 上のぷよ (サブ)
+        puyoRow.appendChild(createEditablePuyo(c_main, i, 0)); // 下のぷよ (メイン)
+        
+        pairContainer.appendChild(puyoRow);
         listContainer.appendChild(pairContainer);
     }
 }
