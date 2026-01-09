@@ -1195,81 +1195,64 @@ function renderEditNextPuyos() {
 
     if (!listContainer || !visibleSlots[0] || !visibleSlots[1]) return;
 
-    // ネクスト設定内のぷよをクリックしたときの処理（クロージャで確実に値を保持）
-    const createClickHandler = (listIndex, puyoIndex) => {
-        return (event) => {
-            event.stopPropagation();
-            
-            // エディットモードでない場合は何もしない
+    /**
+     * クリックで編集可能なぷよ要素を作成するヘルパー関数
+     */
+    const createEditablePuyo = (color, listIndex, puyoIndex) => {
+        let puyo = document.createElement('div');
+        puyo.className = `puyo puyo-${color}`;
+        
+        puyo.addEventListener('click', (event) => {
+            event.stopPropagation(); 
             if (gameState !== 'editing') return;
             
-            // ぷよの色を変更
             if (editingNextPuyos.length > listIndex) {
-                editingNextPuyos[listIndex][puyoIndex] = currentEditColor;
-                renderEditNextPuyos();
+                // puyoIndex: 0=メイン(下), 1=サブ(上)
+                editingNextPuyos[listIndex][puyoIndex] = currentEditColor; 
+                renderEditNextPuyos(); 
             }
-        };
+        });
+        
+        return puyo;
     };
 
-    // N1, N2の表示（visibleSlots）
+
+    // --- 1. 現在のNEXT 1, NEXT 2 の描画 (リストの先頭 2つ) ---
     visibleSlots.forEach((slot, index) => {
         slot.innerHTML = '';
-        slot.className = 'next-puyo-slot'; 
         if (editingNextPuyos.length > index) {
             const [c_main, c_sub] = editingNextPuyos[index];
             
-            // サブぷよ（上）
-            const subPuyo = document.createElement('div');
-            subPuyo.className = `puyo puyo-${c_sub}`;
-            subPuyo.style.cursor = 'pointer';
-            subPuyo.style.pointerEvents = 'auto';
-            subPuyo.addEventListener('click', createClickHandler(index, 1), true);
-            slot.appendChild(subPuyo);
-            
-            // メインぷよ（下）
-            const mainPuyo = document.createElement('div');
-            mainPuyo.className = `puyo puyo-${c_main}`;
-            mainPuyo.style.cursor = 'pointer';
-            mainPuyo.style.pointerEvents = 'auto';
-            mainPuyo.addEventListener('click', createClickHandler(index, 0), true);
-            slot.appendChild(mainPuyo);
+            slot.appendChild(createEditablePuyo(c_sub, index, 1)); // 上のぷよ (サブ)
+            slot.appendChild(createEditablePuyo(c_main, index, 0)); // 下のぷよ (メイン)
         }
     });
 
-    // N3以降のリスト表示
+    // --- 2. 50手先までのリストの描画 ---
     listContainer.innerHTML = '';
+    
+    // NEXT 3 以降 (index 2 から MAX_NEXT_PUYOS - 1 まで)
     for (let i = NUM_VISIBLE_NEXT_PUYOS; i < MAX_NEXT_PUYOS; i++) {
         if (editingNextPuyos.length <= i) break;
 
         const pairContainer = document.createElement('div');
         pairContainer.className = 'next-puyo-slot-pair';
 
+        // 手数 (例: N3, N4...)
         const countSpan = document.createElement('span');
         countSpan.textContent = `N${i + 1}`;
         pairContainer.appendChild(countSpan);
         
-        const miniSlot = document.createElement('div');
-        miniSlot.className = 'next-puyo-slot';
+        // ぷよの行
+        const puyoRow = document.createElement('div');
+        puyoRow.className = 'next-puyo-row';
         
         const [c_main, c_sub] = editingNextPuyos[i];
         
-        // サブぷよ（上）
-        const subPuyo = document.createElement('div');
-        subPuyo.className = `puyo puyo-${c_sub}`;
-        subPuyo.style.cursor = 'pointer';
-        subPuyo.style.pointerEvents = 'auto';
-        subPuyo.addEventListener('click', createClickHandler(i, 1), true);
-        miniSlot.appendChild(subPuyo);
-        
-        // メインぷよ（下）
-        const mainPuyo = document.createElement('div');
-        mainPuyo.className = `puyo puyo-${c_main}`;
-        mainPuyo.style.cursor = 'pointer';
-        mainPuyo.style.pointerEvents = 'auto';
-        mainPuyo.addEventListener('click', createClickHandler(i, 0), true);
-        miniSlot.appendChild(mainPuyo);
+        puyoRow.appendChild(createEditablePuyo(c_sub, i, 1)); // 上のぷよ (サブ)
+        puyoRow.appendChild(createEditablePuyo(c_main, i, 0)); // 下のぷよ (メイン)
 
-        pairContainer.appendChild(miniSlot);
+        pairContainer.appendChild(puyoRow);
         listContainer.appendChild(pairContainer);
     }
 }
