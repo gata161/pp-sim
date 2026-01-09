@@ -1185,7 +1185,7 @@ function renderPlayNextPuyo() {
     });
 }
 
-// --- 【修正済み】エディットモードのネクスト表示（GitHubバックアップ版を参考） ---
+// --- 【修正済み】エディットモードのネクスト表示 ---
 function renderEditNextPuyos() {
     const listContainer = document.getElementById('edit-next-list-container');
     const visibleSlots = [
@@ -1195,64 +1195,92 @@ function renderEditNextPuyos() {
 
     if (!listContainer || !visibleSlots[0] || !visibleSlots[1]) return;
 
-    /**
-     * クリックで編集可能なぷよ要素を作成するヘルパー関数
-     * GitHubバックアップの動作ロジックを採用
-     */
-    const createEditablePuyo = (color, listIndex, puyoIndex) => {
-        let puyo = document.createElement('div');
-        puyo.className = `puyo puyo-${color}`;
-        
-        puyo.addEventListener('click', (event) => {
+    // ネクスト設定内のぷよをクリックしたときの処理（クロージャで確実に値を保持）
+    const createClickHandler = (listIndex, puyoIndex) => {
+        return (event) => {
             event.stopPropagation();
-            if (gameState !== 'editing') return;
+            console.log('Clicked puyo at [' + listIndex + '][' + puyoIndex + '], currentEditColor=' + currentEditColor);
+            
+            // エディットパネルが表示されているかどうかを確認
+            const editPanel = document.getElementById('edit-panel');
+            if (!editPanel || editPanel.style.display === 'none') {
+                console.log('Edit panel is not visible');
+                return;
+            }
+            
+            if (currentEditColor === COLORS.EMPTY) {
+                alert('パレットから色を選んでください');
+                return;
+            }
             
             if (editingNextPuyos.length > listIndex) {
-                // puyoIndex: 0=メイン(下), 1=サブ(上)
+                console.log('Before: editingNextPuyos[' + listIndex + '] = [' + editingNextPuyos[listIndex][0] + ', ' + editingNextPuyos[listIndex][1] + ']');
                 editingNextPuyos[listIndex][puyoIndex] = currentEditColor;
+                console.log('After: editingNextPuyos[' + listIndex + '] = [' + editingNextPuyos[listIndex][0] + ', ' + editingNextPuyos[listIndex][1] + ']');
                 renderEditNextPuyos();
             }
-        });
-        
-        return puyo;
+        };
     };
 
-    // --- 1. 現在のNEXT 1, NEXT 2 の描画 (リストの先頭 2つ) ---
+    // N1, N2の表示（visibleSlots）
     visibleSlots.forEach((slot, index) => {
         slot.innerHTML = '';
+        slot.className = 'next-puyo-slot'; 
         if (editingNextPuyos.length > index) {
             const [c_main, c_sub] = editingNextPuyos[index];
             
-            slot.appendChild(createEditablePuyo(c_sub, index, 1)); // 上のぷよ (サブ)
-            slot.appendChild(createEditablePuyo(c_main, index, 0)); // 下のぷよ (メイン)
+            // サブぷよ（上）
+            const subPuyo = document.createElement('div');
+            subPuyo.className = `puyo puyo-${c_sub}`;
+            subPuyo.style.cursor = 'pointer';
+            subPuyo.style.pointerEvents = 'auto';
+            subPuyo.addEventListener('click', createClickHandler(index, 1), true);
+            slot.appendChild(subPuyo);
+            
+            // メインぷよ（下）
+            const mainPuyo = document.createElement('div');
+            mainPuyo.className = `puyo puyo-${c_main}`;
+            mainPuyo.style.cursor = 'pointer';
+            mainPuyo.style.pointerEvents = 'auto';
+            mainPuyo.addEventListener('click', createClickHandler(index, 0), true);
+            slot.appendChild(mainPuyo);
         }
     });
 
-    // --- 2. 50手先までのリストの描画 ---
+    // N3以降のリスト表示
     listContainer.innerHTML = '';
-    
-    // NEXT 3 以降 (index 2 から MAX_NEXT_PUYOS - 1 まで)
     for (let i = NUM_VISIBLE_NEXT_PUYOS; i < MAX_NEXT_PUYOS; i++) {
         if (editingNextPuyos.length <= i) break;
-        
+
         const pairContainer = document.createElement('div');
         pairContainer.className = 'next-puyo-slot-pair';
-        
-        // 手数 (例: N3, N4...)
+
         const countSpan = document.createElement('span');
         countSpan.textContent = `N${i + 1}`;
         pairContainer.appendChild(countSpan);
         
-        // ぷよの行
-        const puyoRow = document.createElement('div');
-        puyoRow.className = 'next-puyo-row';
+        const miniSlot = document.createElement('div');
+        miniSlot.className = 'next-puyo-slot';
         
         const [c_main, c_sub] = editingNextPuyos[i];
         
-        puyoRow.appendChild(createEditablePuyo(c_sub, i, 1)); // 上のぷよ (サブ)
-        puyoRow.appendChild(createEditablePuyo(c_main, i, 0)); // 下のぷよ (メイン)
+        // サブぷよ（上）
+        const subPuyo = document.createElement('div');
+        subPuyo.className = `puyo puyo-${c_sub}`;
+        subPuyo.style.cursor = 'pointer';
+        subPuyo.style.pointerEvents = 'auto';
+        subPuyo.addEventListener('click', createClickHandler(i, 1), true);
+        miniSlot.appendChild(subPuyo);
         
-        pairContainer.appendChild(puyoRow);
+        // メインぷよ（下）
+        const mainPuyo = document.createElement('div');
+        mainPuyo.className = `puyo puyo-${c_main}`;
+        mainPuyo.style.cursor = 'pointer';
+        mainPuyo.style.pointerEvents = 'auto';
+        mainPuyo.addEventListener('click', createClickHandler(i, 0), true);
+        miniSlot.appendChild(mainPuyo);
+
+        pairContainer.appendChild(miniSlot);
         listContainer.appendChild(pairContainer);
     }
 }
