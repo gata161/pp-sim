@@ -330,6 +330,19 @@ body {
 #edit-next-list-container .puyo {
     width: 20px !important;
     height: 20px !important;
+    cursor: pointer;
+}
+
+/* next-puyo-rowのスタイル（旧バージョンから追加） */
+.next-puyo-slot-pair .next-puyo-row {
+    margin: 0; 
+    gap: 8px; 
+    justify-content: flex-start; 
+    flex-grow: 1;
+    padding-left: 10px;
+    display: flex;
+    flex-direction: row; 
+    align-items: center;
 }
 
 /* リスト全体のスクロール設定 */
