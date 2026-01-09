@@ -145,6 +145,11 @@ body {
     color: #e63946;
 }
 
+.small-text {
+  font-size: 8px;
+  color: #666666; /* 灰色にするとより補足っぽくなります */
+}
+
 /* NEXTぷよ */
 .next-puyo-row {
     display: flex; 
