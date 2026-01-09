@@ -1202,7 +1202,7 @@ function renderEditNextPuyos() {
         let puyo = document.createElement('div');
         puyo.className = `puyo puyo-${color}`;
         
-        puyo.addEventListener('click', (event) => {
+        puyo.addEventListener('pointerdown', (event) => {
             event.stopPropagation(); 
             if (gameState !== 'editing') return;
             
